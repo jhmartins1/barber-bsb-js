@@ -1,0 +1,24 @@
+{
+  "name": "@barberjs/auth",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@barberjs/db": "workspace:*",
+    "@barberjs/env": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@barberjs/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}
