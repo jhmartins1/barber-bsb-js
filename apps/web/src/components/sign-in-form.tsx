@@ -2,15 +2,13 @@ import { useForm } from "@tanstack/react-form";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import z from "zod";
-
 import { authClient } from "@/lib/auth-client";
-
 import Loader from "./loader";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 
-export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
+export default function SignInForm() {
   const router = useRouter();
   const { isPending } = authClient.useSession();
 
@@ -39,7 +37,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
     validators: {
       onSubmit: z.object({
         email: z.email("Invalid email address"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
+        password: z.string().min(6, "Password must be at least 6 characters"),
       }),
     },
   });
@@ -50,7 +48,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
 
   return (
     <div className="mx-auto w-full mt-10 max-w-md p-6">
-      <h1 className="mb-6 text-center text-3xl font-bold">Welcome Back</h1>
+      <h1 className="mb-6 text-center text-3xl font-bold">Login</h1>
 
       <form
         onSubmit={(e) => {
@@ -58,7 +56,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
           e.stopPropagation();
           form.handleSubmit();
         }}
-        className="space-y-4"
+        className="space-y-6"
       >
         <div>
           <form.Field name="email">
@@ -87,7 +85,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
           <form.Field name="password">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor={field.name}>Password</Label>
+                <Label htmlFor={field.name}>Senha</Label>
                 <Input
                   id={field.name}
                   name={field.name}
@@ -113,7 +111,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
               className="w-full"
               disabled={!state.canSubmit || state.isSubmitting}
             >
-              {state.isSubmitting ? "Submitting..." : "Sign In"}
+              {state.isSubmitting ? "Submitting..." : "Entrar"}
             </Button>
           )}
         </form.Subscribe>
@@ -122,10 +120,10 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
       <div className="mt-4 text-center">
         <Button
           variant="link"
-          onClick={onSwitchToSignUp}
           className="text-indigo-600 hover:text-indigo-800"
+          onClick={() => router.push("/sign-up")}
         >
-          Need an account? Sign Up
+          Não tem uma conta? Cadastre-se
         </Button>
       </div>
     </div>
