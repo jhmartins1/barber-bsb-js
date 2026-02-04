@@ -8,6 +8,11 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 
+const signInSchema = z.object({
+  email: z.email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
 export default function SignInForm() {
   const router = useRouter();
   const { isPending } = authClient.useSession();
@@ -35,10 +40,7 @@ export default function SignInForm() {
       );
     },
     validators: {
-      onSubmit: z.object({
-        email: z.email("Invalid email address"),
-        password: z.string().min(6, "Password must be at least 6 characters"),
-      }),
+      onSubmit: signInSchema
     },
   });
 
