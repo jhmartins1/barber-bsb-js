@@ -137,7 +137,7 @@ export default function SignInForm() {
         </form.Subscribe>
       </form>
 
-      <div className="space-y-3">
+      <div className="space-y-3 my-4">
         <button
           onClick={() => handleSocialAuth()}
           className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -164,7 +164,7 @@ export default function SignInForm() {
         </button>
       </div>
 
-      <div className="mt-4 text-center">
+      <div className="text-center">
         <Button
           variant="link"
           className="text-indigo-600 hover:text-indigo-800"
