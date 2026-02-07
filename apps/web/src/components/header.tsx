@@ -3,25 +3,24 @@ import Link from "next/link";
 
 import { ModeToggle } from "./mode-toggle";
 import UserMenu from "./user-menu";
+import { authClient } from "@/lib/auth-client";
 
 export default function Header() {
-  const links = [
-    { to: "/", label: "Inicio" },
-    { to: "/dashboard", label: "Dashboard" },
-  ] as const;
+  const { data: session } = authClient.useSession();
 
   return (
     <div>
       <div className="flex flex-row items-center justify-between px-2 py-1">
         <nav className="flex gap-4 text-lg">
-          {links.map(({ to, label }) => {
-            return (
-              <Link key={to} href={to}>
-                {label}
-              </Link>
-            );
-          })}
+          <Link href="/">Inicio</Link>
+
+          {session?.user && (
+            <Link href="/dashboard">
+              Agendamento
+            </Link>
+          )}
         </nav>
+
         <div className="flex items-center gap-2">
           <ModeToggle />
           <UserMenu />
