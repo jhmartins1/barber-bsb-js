@@ -31,6 +31,7 @@
   "dependencies": {
     "@barberjs/env": "workspace:*",
     "dotenv": "catalog:",
+    "motion": "^12.33.0",
     "zod": "catalog:"
   },
   "devDependencies": {
