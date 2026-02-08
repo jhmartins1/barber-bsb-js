@@ -6,6 +6,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
+import { useEffect } from "react";
+
+type Barber = {
+  id: string;
+  name: string;
+};
+
+const API_URL = "http://127.0.0.1:3333";
 
 const services = [
   { id: "haircut", label: "Corte de cabelo", duration: 30 },
@@ -13,21 +21,30 @@ const services = [
   { id: "combo", label: "Corte + Barba", duration: 50 },
 ];
 
-const barbers = [
-  { id: "1", name: "Carlos" },
-  { id: "2", name: "João" },
-  { id: "3", name: "Pedro" },
-];
-
 export default function Dashboard({
   session,
 }: {
   session: typeof authClient.$Infer.Session;
 }) {
+  const [barbers, setBarbers] = useState<Barber[]>([]);
   const [step, setStep] = useState(1);
   const [service, setService] = useState<string | null>(null);
   const [date, setDate] = useState("");
   const [barber, setBarber] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadBarbers() {
+      try {
+        const response = await fetch(`${API_URL}/barber`);
+        const data = await response.json();
+        setBarbers(data);
+      } catch (err) {
+        console.error("Erro ao buscar barbeiros", err);
+      }
+    }
+
+    loadBarbers();
+  }, []);
 
   const selectedService = useMemo(
     () => services.find((s) => s.id === service),
@@ -74,7 +91,12 @@ export default function Dashboard({
             )}
 
             {step === 3 && (
-              <BarberStep selected={barber} onSelect={setBarber} />
+              <BarberStep
+                selected={barber}
+                onSelect={setBarber}
+                barbers={barbers}
+              />
+
             )}
 
             <div className="flex justify-between gap-2 pt-2">
@@ -205,10 +227,13 @@ function DateStep({
 function BarberStep({
   selected,
   onSelect,
+  barbers,
 }: {
   selected: string | null;
   onSelect: (v: string) => void;
+  barbers: { id: string; name: string }[];
 }) {
+
   return (
     <div className="space-y-3">
       <h2 className="text-xl font-semibold">Escolha o barbeiro</h2>
