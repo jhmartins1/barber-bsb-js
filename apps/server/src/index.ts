@@ -3,8 +3,16 @@ import { env } from "@barberjs/env/server";
 import { cors } from "@elysiajs/cors";
 import { Elysia } from "elysia";
 import { CreateBarberController, createBarberBodySchema } from "./controllers/Barber/CreateBarberController";
+import { GetOneBarberController } from "./controllers/Barber/GetOneBarberController";
+import { GetAllBarberController } from "./controllers/Barber/GetAllBarberController";
+import { UpdateBarberController } from "./controllers/Barber/UpdateBarberController";
+import { DeleteBarberController } from "./controllers/Barber/DeleteBarberController";
 
 const createBarberController = new CreateBarberController();
+const getOneBarberController = new GetOneBarberController();
+const getAllBarberController = new GetAllBarberController();
+const updateBarberController = new UpdateBarberController();
+const deleteBarberController = new DeleteBarberController();
 
 const app = new Elysia()
   .use(
@@ -25,6 +33,10 @@ const app = new Elysia()
   .post("/barber", (ctx) => createBarberController.handle(ctx), {
     body: createBarberBodySchema,
   })
+  .get("/barber/:id", (ctx) => getOneBarberController.handle(ctx))
+  .get("/barber", () => getAllBarberController.handle())
+  .put("/barber/:id", (ctx) => updateBarberController.handle(ctx))
+  .delete("/barber/:id", (ctx) => deleteBarberController.handle(ctx))
   .get("/", () => "Hello, World!")
   .listen(3333, () => {
     console.log("Server is running on http://localhost:3333");
