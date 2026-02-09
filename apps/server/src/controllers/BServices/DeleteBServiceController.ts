@@ -9,9 +9,15 @@ export class DeleteBServiceController {
     async handle({ params, set }: any) {
         try {
             const service = new DeleteBService();
-            const barber = await service.execute(params.id);
 
-            return barber;
+            const deletedService = await service.execute(params.id);
+
+            set.status = 200;
+
+            return {
+                message: "Service deleted",
+                data: deletedService,
+            };
         } catch (error) {
             set.status = 404;
 
@@ -21,4 +27,3 @@ export class DeleteBServiceController {
         }
     }
 }
-

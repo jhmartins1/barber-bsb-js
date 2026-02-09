@@ -5,8 +5,9 @@ export const createServiceBodySchema = t.Object({
     name: t.String(),
     price: t.Number(),
     duration: t.Number(),
-    barberId: t.String(),
+    barberIds: t.Array(t.String()),
 });
+
 
 export class CreateBServiceController {
     async handle({ body, set }: any) {

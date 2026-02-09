@@ -3,8 +3,8 @@ import { GetAllBService } from "@/services/BServices/GetAllBService";
 export class GetAllBServiceController {
     async handle() {
         const service = new GetAllBService();
-        const barberServices = await service.execute();
+        const services = await service.execute();
 
-        return barberServices;
+        return services;
     }
 }
