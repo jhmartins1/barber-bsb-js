@@ -2,19 +2,25 @@ import { prisma } from "@barberjs/db";
 
 export class GetOneBService {
     async execute(id: string) {
-        const barberServices = await prisma.service.findUnique({
+        const service = await prisma.service.findUnique({
             where: {
                 id,
             },
             include: {
-                barber: true,
+                barbers: {
+                    select: {
+                        id: true,
+                        name: true,
+                        image: true,
+                    },
+                },
             },
         });
 
-        if (!barberServices) {
-            throw new Error("Barber Services not found");
+        if (!service) {
+            throw new Error("Service not found");
         }
 
-        return barberServices;
+        return service;
     }
 }

@@ -2,29 +2,21 @@ import { prisma } from "@barberjs/db";
 import type { IService } from "@/utils/ServiceInterface";
 
 export class CreateBService {
-    async execute({ name, price, duration, barberId }: IService) {
-        if (!name) {
-            throw new Error("Name is required");
+    async execute({ name, price, duration, barberIds }: IService) {
+        if (!name) throw new Error("Name is required");
+        if (price == null) throw new Error("Price is required");
+        if (duration == null) throw new Error("Duration is required");
+
+        if (!barberIds || barberIds.length === 0) {
+            throw new Error("At least one barber is required");
         }
 
-        if (price === undefined || price === null) {
-            throw new Error("Price is required");
-        }
-
-        if (duration === undefined || duration === null) {
-            throw new Error("Duration is required");
-        }
-
-        if (!barberId) {
-            throw new Error("BarberId is required");
-        }
-
-        const barberExists = await prisma.barber.findUnique({
-            where: { id: barberId },
+        const barbers = await prisma.barber.findMany({
+            where: { id: { in: barberIds } },
         });
 
-        if (!barberExists) {
-            throw new Error("Barber not found");
+        if (barbers.length !== barberIds.length) {
+            throw new Error("One or more barbers not found");
         }
 
         const service = await prisma.service.create({
@@ -32,9 +24,12 @@ export class CreateBService {
                 name,
                 price,
                 duration,
-                barber: {
-                    connect: { id: barberId },
+                barbers: {
+                    connect: barberIds.map(id => ({ id })),
                 },
+            },
+            include: {
+                barbers: true,
             },
         });
 

@@ -2,12 +2,11 @@ import { prisma } from "@barberjs/db";
 import type { IService } from "@/utils/ServiceInterface";
 
 export class UpdateBService {
-    async execute({ id, name, price, duration, barberId }: IService) {
+    async execute({ id, name, price, duration, barberIds }: IService) {
         if (!id) {
             throw new Error("Service id is required");
         }
 
-        // verifica se existe
         const serviceExists = await prisma.service.findUnique({
             where: { id },
         });
@@ -16,14 +15,18 @@ export class UpdateBService {
             throw new Error("Service not found");
         }
 
-        // só valida barbeiro se ele estiver sendo alterado
-        if (barberId) {
-            const barberExists = await prisma.barber.findUnique({
-                where: { id: barberId },
+        // valida barbeiros somente se enviados
+        if (barberIds) {
+            if (barberIds.length === 0) {
+                throw new Error("Service must have at least one barber");
+            }
+
+            const barbers = await prisma.barber.findMany({
+                where: { id: { in: barberIds } },
             });
 
-            if (!barberExists) {
-                throw new Error("Barber not found");
+            if (barbers.length !== barberIds.length) {
+                throw new Error("One or more barbers not found");
             }
         }
 
@@ -33,9 +36,14 @@ export class UpdateBService {
                 ...(name !== undefined && { name }),
                 ...(price !== undefined && { price }),
                 ...(duration !== undefined && { duration }),
-                ...(barberId !== undefined && {
-                    barber: { connect: { id: barberId } },
+                ...(barberIds !== undefined && {
+                    barbers: {
+                        set: barberIds.map(id => ({ id })),
+                    },
                 }),
+            },
+            include: {
+                barbers: true,
             },
         });
 
