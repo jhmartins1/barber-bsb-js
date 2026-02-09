@@ -1,55 +1,61 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
-import { useEffect } from "react";
 
 type Barber = {
   id: string;
   name: string;
 };
 
-const API_URL = "http://127.0.0.1:3333";
+type Service = {
+  id: string;
+  name: string;
+  price: number;
+  duration: number;
+  barbers: Barber[];
+};
 
-const services = [
-  { id: "haircut", label: "Corte de cabelo", duration: 30 },
-  { id: "beard", label: "Barba", duration: 20 },
-  { id: "combo", label: "Corte + Barba", duration: 50 },
-];
+const API_URL = "http://127.0.0.1:3333";
 
 export default function Dashboard({
   session,
 }: {
   session: typeof authClient.$Infer.Session;
 }) {
-  const [barbers, setBarbers] = useState<Barber[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [step, setStep] = useState(1);
   const [service, setService] = useState<string | null>(null);
   const [date, setDate] = useState("");
   const [barber, setBarber] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadBarbers() {
+    async function loadServices() {
       try {
-        const response = await fetch(`${API_URL}/barber`);
+        const response = await fetch(`${API_URL}/service`);
         const data = await response.json();
-        setBarbers(data);
+        setServices(data);
       } catch (err) {
-        console.error("Erro ao buscar barbeiros", err);
+        console.error("Erro ao carregar serviços", err);
       }
     }
 
-    loadBarbers();
+    loadServices();
   }, []);
 
   const selectedService = useMemo(
     () => services.find((s) => s.id === service),
-    [service]
+    [service, services]
   );
+
+  const availableBarbers = useMemo(() => {
+    if (!selectedService) return [];
+    return selectedService.barbers ?? [];
+  }, [selectedService]);
 
   function reset() {
     setStep(1);
@@ -60,7 +66,8 @@ export default function Dashboard({
 
   function handleFinish() {
     alert(
-      `Agendamento confirmado!\n\nServiço: ${selectedService?.label}\nData: ${date}\nBarbeiro: ${barbers.find((b) => b.id === barber)?.name
+      `Agendamento confirmado!\n\nServiço: ${selectedService?.name
+      }\nData: ${date}\nBarbeiro: ${availableBarbers.find((b) => b.id === barber)?.name
       }`
     );
 
@@ -79,14 +86,18 @@ export default function Dashboard({
         <Card className="rounded-2xl shadow-sm">
           <CardContent className="p-6 space-y-6">
             {step === 1 && (
-              <ServiceStep selected={service} onSelect={setService} />
+              <ServiceStep
+                selected={service}
+                onSelect={setService}
+                services={services}
+              />
             )}
 
             {step === 2 && (
               <DateStep
                 date={date}
                 onChange={setDate}
-                service={selectedService?.label}
+                service={selectedService?.name}
               />
             )}
 
@@ -94,9 +105,8 @@ export default function Dashboard({
               <BarberStep
                 selected={barber}
                 onSelect={setBarber}
-                barbers={barbers}
+                barbers={availableBarbers}
               />
-
             )}
 
             <div className="flex justify-between gap-2 pt-2">
@@ -119,7 +129,10 @@ export default function Dashboard({
                   Próximo
                 </Button>
               ) : (
-                <Button disabled={!barber} onClick={handleFinish}>
+                <Button
+                  disabled={!barber || availableBarbers.length === 0}
+                  onClick={handleFinish}
+                >
                   Confirmar agendamento
                 </Button>
               )}
@@ -163,9 +176,11 @@ function StepHeader({ step }: { step: number }) {
 function ServiceStep({
   selected,
   onSelect,
+  services,
 }: {
   selected: string | null;
   onSelect: (value: string) => void;
+  services: Service[];
 }) {
   return (
     <div className="space-y-3">
@@ -182,9 +197,9 @@ function ServiceStep({
                 : "border-muted hover:border-primary"
               }`}
           >
-            <p className="font-medium">{service.label}</p>
+            <p className="font-medium">{service.name}</p>
             <p className="text-sm text-muted-foreground">
-              Duração média: {service.duration} min
+              {service.duration} min • R$ {service.price}
             </p>
           </button>
         ))}
@@ -231,12 +246,17 @@ function BarberStep({
 }: {
   selected: string | null;
   onSelect: (v: string) => void;
-  barbers: { id: string; name: string }[];
+  barbers: Barber[];
 }) {
-
   return (
     <div className="space-y-3">
       <h2 className="text-xl font-semibold">Escolha o barbeiro</h2>
+
+      {barbers.length === 0 && (
+        <p className="text-sm text-muted-foreground">
+          Não há barbeiros disponíveis para este serviço.
+        </p>
+      )}
 
       <div className="grid gap-3">
         {barbers.map((barber) => (
