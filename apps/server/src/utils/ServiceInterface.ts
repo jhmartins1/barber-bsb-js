@@ -3,5 +3,5 @@ export interface IService {
     name: string;
     price: number;
     duration: number;
-    barberId: string;
+    barberIds: string[];
 }
