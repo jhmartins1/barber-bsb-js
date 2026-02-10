@@ -22,6 +22,24 @@ type Service = {
 
 const API_URL = "http://127.0.0.1:3333";
 
+const TIMES = [
+  "T0800",
+  "T0900",
+  "T1000",
+  "T1100",
+  "T1400",
+  "T1500",
+  "T1600",
+  "T1700",
+  "T1800",
+  "T1900",
+  "T2000",
+];
+
+function formatTime(time: string) {
+  return time.replace("T", "").replace(/(\d{2})(\d{2})/, "$1:$2");
+}
+
 export default function Dashboard({
   session,
 }: {
@@ -32,16 +50,13 @@ export default function Dashboard({
   const [service, setService] = useState<string | null>(null);
   const [date, setDate] = useState("");
   const [barber, setBarber] = useState<string | null>(null);
+  const [time, setTime] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadServices() {
-      try {
-        const response = await fetch(`${API_URL}/service`);
-        const data = await response.json();
-        setServices(data);
-      } catch (err) {
-        console.error("Erro ao carregar serviços", err);
-      }
+      const response = await fetch(`${API_URL}/service`);
+      const data = await response.json();
+      setServices(data);
     }
 
     loadServices();
@@ -62,15 +77,27 @@ export default function Dashboard({
     setService(null);
     setDate("");
     setBarber(null);
+    setTime(null);
   }
 
-  function handleFinish() {
-    alert(
-      `Agendamento confirmado!\n\nServiço: ${selectedService?.name
-      }\nData: ${date}\nBarbeiro: ${availableBarbers.find((b) => b.id === barber)?.name
-      }`
-    );
+  async function handleFinish() {
+    if (!service || !barber || !date || !time) return;
 
+    await fetch(`${API_URL}/schedule`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        serviceId: service,
+        barberId: barber,
+        userId: session.user.id,
+        date,
+        time,
+      }),
+    });
+
+    alert("Agendamento confirmado!");
     reset();
   }
 
@@ -109,6 +136,10 @@ export default function Dashboard({
               />
             )}
 
+            {step === 4 && (
+              <TimeStep selected={time} onSelect={setTime} />
+            )}
+
             <div className="flex justify-between gap-2 pt-2">
               <Button
                 variant="outline"
@@ -118,21 +149,19 @@ export default function Dashboard({
                 Voltar
               </Button>
 
-              {step < 3 ? (
+              {step < 4 ? (
                 <Button
                   disabled={
                     (step === 1 && !service) ||
-                    (step === 2 && !date)
+                    (step === 2 && !date) ||
+                    (step === 3 && !barber)
                   }
                   onClick={() => setStep((s) => s + 1)}
                 >
                   Próximo
                 </Button>
               ) : (
-                <Button
-                  disabled={!barber || availableBarbers.length === 0}
-                  onClick={handleFinish}
-                >
+                <Button disabled={!time} onClick={handleFinish}>
                   Confirmar agendamento
                 </Button>
               )}
@@ -145,10 +174,10 @@ export default function Dashboard({
 }
 
 function StepHeader({ step }: { step: number }) {
-  const steps = ["Serviço", "Data", "Barbeiro"];
+  const steps = ["Serviço", "Data", "Barbeiro", "Horário"];
 
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-4 gap-2">
       {steps.map((label, index) => {
         const number = index + 1;
         const active = number === step;
@@ -173,21 +202,13 @@ function StepHeader({ step }: { step: number }) {
   );
 }
 
-function ServiceStep({
-  selected,
-  onSelect,
-  services,
-}: {
-  selected: string | null;
-  onSelect: (value: string) => void;
-  services: Service[];
-}) {
+function ServiceStep({ selected, onSelect, services }: any) {
   return (
     <div className="space-y-3">
       <h2 className="text-xl font-semibold">Escolha o serviço</h2>
 
       <div className="grid gap-3">
-        {services.map((service) => (
+        {services.map((service: Service) => (
           <button
             key={service.id}
             onClick={() => onSelect(service.id)}
@@ -208,15 +229,7 @@ function ServiceStep({
   );
 }
 
-function DateStep({
-  date,
-  onChange,
-  service,
-}: {
-  date: string;
-  onChange: (v: string) => void;
-  service?: string;
-}) {
+function DateStep({ date, onChange, service }: any) {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Escolha a data</h2>
@@ -239,27 +252,13 @@ function DateStep({
   );
 }
 
-function BarberStep({
-  selected,
-  onSelect,
-  barbers,
-}: {
-  selected: string | null;
-  onSelect: (v: string) => void;
-  barbers: Barber[];
-}) {
+function BarberStep({ selected, onSelect, barbers }: any) {
   return (
     <div className="space-y-3">
       <h2 className="text-xl font-semibold">Escolha o barbeiro</h2>
 
-      {barbers.length === 0 && (
-        <p className="text-sm text-muted-foreground">
-          Não há barbeiros disponíveis para este serviço.
-        </p>
-      )}
-
       <div className="grid gap-3">
-        {barbers.map((barber) => (
+        {barbers.map((barber: Barber) => (
           <button
             key={barber.id}
             onClick={() => onSelect(barber.id)}
@@ -270,6 +269,30 @@ function BarberStep({
               }`}
           >
             <p className="font-medium">{barber.name}</p>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TimeStep({ selected, onSelect }: any) {
+  return (
+    <div className="space-y-3">
+      <h2 className="text-xl font-semibold">Escolha o horário</h2>
+
+      <div className="grid grid-cols-3 gap-3">
+        {TIMES.map((time) => (
+          <button
+            key={time}
+            onClick={() => onSelect(time)}
+            className={`p-3 rounded-xl border transition
+              ${selected === time
+                ? "border-primary bg-primary/10"
+                : "border-muted hover:border-primary"
+              }`}
+          >
+            {formatTime(time)}
           </button>
         ))}
       </div>
