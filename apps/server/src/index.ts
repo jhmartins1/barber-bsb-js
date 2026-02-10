@@ -15,6 +15,10 @@ import { GetOneBServiceController } from "./controllers/BServices/GetOneBService
 import { UpdateBServiceController } from "./controllers/BServices/UpdateBServiceController";
 import { DeleteBServiceController } from "./controllers/BServices/DeleteBServiceController";
 
+import { CreateScheduleController, createScheduleBodySchema } from "./controllers/Schedule/CreateScheduleController";
+import { GetAllScheduleController } from "./controllers/Schedule/GetAllScheduleController";
+
+
 const createBarberController = new CreateBarberController();
 const getOneBarberController = new GetOneBarberController();
 const getAllBarberController = new GetAllBarberController();
@@ -26,6 +30,9 @@ const getAllBServiceController = new GetAllBServiceController();
 const getOneBServiceController = new GetOneBServiceController();
 const updateBServiceController = new UpdateBServiceController();
 const deleteBServiceController = new DeleteBServiceController();
+
+const createScheduleController = new CreateScheduleController();
+const getAllScheduleController = new GetAllScheduleController();
 
 const app = new Elysia()
   .use(
@@ -57,6 +64,10 @@ const app = new Elysia()
   .get("/service/:id", (ctx) => getOneBServiceController.handle(ctx))
   .put("/service/:id", (ctx) => updateBServiceController.handle(ctx))
   .delete("/service/:id", (ctx) => deleteBServiceController.handle(ctx))
+  .post("/schedule", (ctx) => createScheduleController.handle(ctx), {
+    body: createScheduleBodySchema,
+  })
+  .get("/schedule", (ctx) => getAllScheduleController.handle(ctx))
   .get("/", () => "Hello, World!")
   .listen(3333, () => {
     console.log("Server is running on http://localhost:3333");
