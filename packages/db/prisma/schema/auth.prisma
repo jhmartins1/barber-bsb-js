@@ -53,10 +53,33 @@ model Barber {
   @@map("barber")
 }
 
+enum AppointmentStatus {
+  AGENDADO
+  CONFIRMADO
+  CANCELADO
+}
+
+enum AppointmentTime {
+  T0800
+  T0900
+  T1000
+  T1100
+  T1400
+  T1500
+  T1600
+  T1700
+  T1800
+  T1900
+  T2000
+}
+
 model Appointment {
-  id   String   @id @default(uuid())
+  id String @id @default(uuid())
+
   date DateTime
-  time String
+  time AppointmentTime
+
+  status AppointmentStatus @default(AGENDADO)
 
   serviceId String
   service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
@@ -70,6 +93,7 @@ model Appointment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([date, time, barberId])
   @@map("appointment")
 }
 
