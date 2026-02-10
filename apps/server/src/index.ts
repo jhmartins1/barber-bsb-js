@@ -3,36 +3,48 @@ import { env } from "@barberjs/env/server";
 import { cors } from "@elysiajs/cors";
 import { Elysia } from "elysia";
 
+// BARBER IMPORTS
 import { CreateBarberController, createBarberBodySchema } from "./controllers/Barber/CreateBarberController";
 import { GetOneBarberController } from "./controllers/Barber/GetOneBarberController";
 import { GetAllBarberController } from "./controllers/Barber/GetAllBarberController";
 import { UpdateBarberController } from "./controllers/Barber/UpdateBarberController";
 import { DeleteBarberController } from "./controllers/Barber/DeleteBarberController";
 
+// BARBER SERVICES IMPORTS
 import { CreateBServiceController, createServiceBodySchema } from "./controllers/BServices/CreateBServiceController";
 import { GetAllBServiceController } from "./controllers/BServices/GetAllBServiceController";
 import { GetOneBServiceController } from "./controllers/BServices/GetOneBServiceController";
 import { UpdateBServiceController } from "./controllers/BServices/UpdateBServiceController";
 import { DeleteBServiceController } from "./controllers/BServices/DeleteBServiceController";
 
+// SCHEDULE IMPORTS
 import { CreateScheduleController, createScheduleBodySchema } from "./controllers/Schedule/CreateScheduleController";
 import { GetAllScheduleController } from "./controllers/Schedule/GetAllScheduleController";
+import { GetOneScheduleController } from "./controllers/Schedule/GetOneScheduleController";
+import { UpdateScheduleController } from "./controllers/Schedule/UpdateScheduleController";
+import { DeleteScheduleController } from "./controllers/Schedule/DeleteScheduleController";
 
 
+// BARBER CONTROLLERS
 const createBarberController = new CreateBarberController();
 const getOneBarberController = new GetOneBarberController();
 const getAllBarberController = new GetAllBarberController();
 const updateBarberController = new UpdateBarberController();
 const deleteBarberController = new DeleteBarberController();
 
+// BARBER SERVICES CONTROLLERS
 const createBServiceController = new CreateBServiceController();
 const getAllBServiceController = new GetAllBServiceController();
 const getOneBServiceController = new GetOneBServiceController();
 const updateBServiceController = new UpdateBServiceController();
 const deleteBServiceController = new DeleteBServiceController();
 
+// SCHEDULE CONTROLLERS
 const createScheduleController = new CreateScheduleController();
 const getAllScheduleController = new GetAllScheduleController();
+const getOneScheduleController = new GetOneScheduleController();
+const updateScheduleController = new UpdateScheduleController();
+const deleteScheduleController = new DeleteScheduleController();
 
 const app = new Elysia()
   .use(
@@ -68,6 +80,9 @@ const app = new Elysia()
     body: createScheduleBodySchema,
   })
   .get("/schedule", (ctx) => getAllScheduleController.handle(ctx))
+  .get("/schedule/:id", (ctx) => getOneScheduleController.handle(ctx))
+  .put("/schedule/:id", (ctx) => updateScheduleController.handle(ctx))
+  .delete("/schedule/:id", (ctx) => deleteScheduleController.handle(ctx))
   .get("/", () => "Hello, World!")
   .listen(3333, () => {
     console.log("Server is running on http://localhost:3333");
