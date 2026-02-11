@@ -6,6 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 type Barber = {
   id: string;
@@ -45,7 +47,11 @@ export default function Dashboard({
 }: {
   session: typeof authClient.$Infer.Session;
 }) {
+  const router = useRouter();
+
   const [services, setServices] = useState<Service[]>([]);
+  const [busyTimes, setBusyTimes] = useState<string[]>([]);
+
   const [step, setStep] = useState(1);
   const [service, setService] = useState<string | null>(null);
   const [date, setDate] = useState("");
@@ -61,6 +67,24 @@ export default function Dashboard({
 
     loadServices();
   }, []);
+
+  // Busca horários ocupados
+  useEffect(() => {
+    if (!date || !barber) return;
+
+    async function loadBusyTimes() {
+      const response = await fetch(
+        `${API_URL}/schedule?date=${date}&barberId=${barber}`
+      );
+
+      if (!response.ok) return;
+
+      const schedules = await response.json();
+      setBusyTimes(schedules.map((s: any) => s.time));
+    }
+
+    loadBusyTimes();
+  }, [date, barber]);
 
   const selectedService = useMemo(
     () => services.find((s) => s.id === service),
@@ -78,12 +102,13 @@ export default function Dashboard({
     setDate("");
     setBarber(null);
     setTime(null);
+    setBusyTimes([]);
   }
 
   async function handleFinish() {
     if (!service || !barber || !date || !time) return;
 
-    await fetch(`${API_URL}/schedule`, {
+    const response = await fetch(`${API_URL}/schedule`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -97,12 +122,21 @@ export default function Dashboard({
       }),
     });
 
-    alert("Agendamento confirmado!");
+    const data = await response.json();
+
+    if (!response.ok) {
+      toast.error(data.message || "Erro ao criar agendamento");
+      return;
+    }
+
+    toast.success("Agendamento confirmado com sucesso");
+
     reset();
+    router.push("/");
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-4 space-y-6">
+    <div className="w-full max-w-2xl mx-auto p-2 space-y-4">
       <StepHeader step={step} />
 
       <motion.div
@@ -111,7 +145,7 @@ export default function Dashboard({
         animate={{ opacity: 1, y: 0 }}
       >
         <Card className="rounded-2xl shadow-sm">
-          <CardContent className="p-6 space-y-6">
+          <CardContent className="p-4 space-y-4">
             {step === 1 && (
               <ServiceStep
                 selected={service}
@@ -137,7 +171,11 @@ export default function Dashboard({
             )}
 
             {step === 4 && (
-              <TimeStep selected={time} onSelect={setTime} />
+              <TimeStep
+                selected={time}
+                onSelect={setTime}
+                busyTimes={busyTimes}
+              />
             )}
 
             <div className="flex justify-between gap-2 pt-2">
@@ -230,8 +268,23 @@ function ServiceStep({ selected, onSelect, services }: any) {
 }
 
 function DateStep({ date, onChange, service }: any) {
+  const today = new Date();
+
+  const days = Array.from({ length: 14 }).map((_, i) => {
+    const d = new Date();
+    d.setDate(today.getDate() + i + 1);
+
+    return {
+      label: d.toLocaleDateString("pt-BR", {
+        weekday: "short",
+      }),
+      day: d.getDate(),
+      value: d.toISOString().split("T")[0],
+    };
+  });
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <h2 className="text-xl font-semibold">Escolha a data</h2>
 
       {service && (
@@ -240,17 +293,31 @@ function DateStep({ date, onChange, service }: any) {
         </p>
       )}
 
-      <Input
-        type="date"
-        value={date}
-        onChange={(e) => onChange(e.target.value)}
-        min={new Date(Date.now() + 86400000)
-          .toISOString()
-          .split("T")[0]}
-      />
+      <div className="grid grid-cols-4 gap-3">
+        {days.map((d) => (
+          <button
+            key={d.value}
+            onClick={() => onChange(d.value)}
+            className={`p-3 rounded-xl border transition text-center
+              ${date === d.value
+                ? "border-primary bg-primary/10"
+                : "border-muted hover:border-primary"
+              }`}
+          >
+            <p className="text-xs uppercase">{d.label}</p>
+            <p className="text-lg font-semibold">{d.day}</p>
+          </button>
+        ))}
+      </div>
+
+      <p className="text-xs text-muted-foreground">
+        Disponível apenas para as próximas duas semanas.
+      </p>
     </div>
   );
 }
+
+
 
 function BarberStep({ selected, onSelect, barbers }: any) {
   return (
@@ -276,25 +343,32 @@ function BarberStep({ selected, onSelect, barbers }: any) {
   );
 }
 
-function TimeStep({ selected, onSelect }: any) {
+function TimeStep({ selected, onSelect, busyTimes }: any) {
   return (
     <div className="space-y-3">
       <h2 className="text-xl font-semibold">Escolha o horário</h2>
 
       <div className="grid grid-cols-3 gap-3">
-        {TIMES.map((time) => (
-          <button
-            key={time}
-            onClick={() => onSelect(time)}
-            className={`p-3 rounded-xl border transition
-              ${selected === time
-                ? "border-primary bg-primary/10"
-                : "border-muted hover:border-primary"
-              }`}
-          >
-            {formatTime(time)}
-          </button>
-        ))}
+        {TIMES.map((time: string) => {
+          const busy = busyTimes?.includes(time);
+
+          return (
+            <button
+              key={time}
+              disabled={busy}
+              onClick={() => !busy && onSelect(time)}
+              className={`p-3 rounded-xl border transition
+                ${busy
+                  ? "bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed"
+                  : selected === time
+                    ? "border-primary bg-primary/10"
+                    : "border-muted hover:border-primary"
+                }`}
+            >
+              {formatTime(time)}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
