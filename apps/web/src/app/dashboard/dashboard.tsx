@@ -22,7 +22,7 @@ type Service = {
   barbers: Barber[];
 };
 
-const API_URL = "http://127.0.0.1:3333";
+const API_URL = process.env.NEXT_PUBLIC_SERVER_URL!;
 
 const TIMES = [
   "T0800",
