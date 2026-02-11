@@ -1,29 +1,22 @@
 "use client";
 
-const TITLE_TEXT = `
- ██████╗ ███████╗████████╗████████╗███████╗██████╗
- ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗
- ██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝
- ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗
- ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║
- ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝
-
- ████████╗    ███████╗████████╗ █████╗  ██████╗██╗  ██╗
- ╚══██╔══╝    ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
-    ██║       ███████╗   ██║   ███████║██║     █████╔╝
-    ██║       ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
-    ██║       ███████║   ██║   ██║  ██║╚██████╗██║  ██╗
-    ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
- `;
+import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-2">
-      <pre className="overflow-x-auto font-mono text-sm">{TITLE_TEXT}</pre>
-      <div className="grid gap-6">
-        <section className="rounded-lg border p-4">
-          <h2 className="mb-2 font-medium">API Status</h2>
-        </section>
+    <div className="text-center mt-6 space-y-6">
+      <h1 className="text-3xl font-bold">
+        Welcome to Barber BSB
+      </h1>
+
+      <div className="flex justify-center">
+        <Image
+          src="/barbershop.jpg"
+          alt="Barbearia"
+          width={900}
+          height={500}
+          className="rounded-xl object-cover"
+        />
       </div>
     </div>
   );
