@@ -1,6 +1,5 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-
 import { authClient } from "@/lib/auth-client";
 import Dashboard from "./dashboard";
 
@@ -20,7 +19,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col items-center">
-      <h1 className="text-4xl py-4 text-primary">
+      <h1 className="text-4xl py-2 text-primary">
         Agendamento
       </h1>
 
@@ -29,6 +28,7 @@ export default async function DashboardPage() {
       </p>
 
       <Dashboard session={session} />
+
     </div>
   );
 }
