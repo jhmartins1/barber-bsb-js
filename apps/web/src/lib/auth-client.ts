@@ -8,9 +8,7 @@ export const authClient = createAuthClient({
   },
 });
 
-export const loginSocial = async () => {
-  return authClient.signIn.social({
-    provider: "google",
-    callbackURL: `${env.NEXT_PUBLIC_APP_URL}/dashboard`,
-  });
+export const loginSocial = () => {
+  const callbackURL = encodeURIComponent(`${env.NEXT_PUBLIC_APP_URL}/dashboard`);
+  window.location.href = `${env.NEXT_PUBLIC_SERVER_URL}/api/auth/sign-in/social?provider=google&callbackURL=${callbackURL}`;
 };
