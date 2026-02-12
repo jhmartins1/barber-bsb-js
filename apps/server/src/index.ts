@@ -85,5 +85,5 @@ const app = new Elysia()
   .delete("/schedule/:id", (ctx) => deleteScheduleController.handle(ctx))
   .get("/", () => "Hello, World!")
   .listen(env.PORT, () => {
-    console.log(`Server is running on http://localhost:${env.PORT}`);
+    console.log(`Server is running on port ${env.PORT}`);
   });
