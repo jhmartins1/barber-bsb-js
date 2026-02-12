@@ -16,6 +16,7 @@ export const auth = betterAuth({
     google: {
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
+      redirectURI: `${env.BETTER_AUTH_URL}/api/auth/callback/google`,
     }
   },
   user: {
@@ -27,12 +28,22 @@ export const auth = betterAuth({
       },
     },
   },
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 60 * 24 * 7, // 7 dias
+    },
+  },
   advanced: {
     defaultCookieAttributes: {
       sameSite: "none",
       secure: true,
       httpOnly: true,
     },
+    crossSubDomainCookies: {
+      enabled: true,
+    },
+    generateId: () => crypto.randomUUID(),
   },
   plugins: [],
 });
