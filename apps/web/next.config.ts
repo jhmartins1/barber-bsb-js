@@ -7,7 +7,6 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        // Quando o cliente chamar /api/auth, o Next.js repassa para a Railway
         source: "/api/auth/:path*",
         destination: "https://barber-bsb-js-production.up.railway.app/api/auth/:path*",
       },
