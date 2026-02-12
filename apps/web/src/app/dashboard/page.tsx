@@ -19,7 +19,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col items-center">
-      <h1 className="text-4xl py-2 text-primary">
+      <h1 className="text-4xl py-4 text-primary">
         Agendamento
       </h1>
 
