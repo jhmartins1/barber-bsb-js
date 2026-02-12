@@ -84,7 +84,7 @@ interface AdminPainelProps {
     session: any;
 }
 
-const API_URL = "http://127.0.0.1:3333";
+const API_URL = process.env.NEXT_PUBLIC_SERVER_URL!;
 
 // Lista de horários padrão para o Dropdown
 const AVAILABLE_TIMES = [
