@@ -1,8 +1,20 @@
 import { prisma } from "@barberjs/db";
 
+// Interface para definir os filtros que o serviço pode receber
+interface GetAllScheduleParams {
+    date?: string;
+    barberId?: string;
+}
+
 export class GetAllScheduleService {
-    async execute() {
+    async execute({ date, barberId }: GetAllScheduleParams = {}) {
         const appointments = await prisma.appointment.findMany({
+            where: {
+                ...(barberId && { barberId }),
+                ...(date && {
+                    date: new Date(date),
+                }),
+            },
             orderBy: {
                 date: "asc",
             },
