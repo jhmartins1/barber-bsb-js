@@ -53,6 +53,7 @@ const app = new Elysia()
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
       credentials: true,
+      exposeHeaders: ["set-cookie"],
     }),
   )
   .all("/api/auth/*", async (context) => {
