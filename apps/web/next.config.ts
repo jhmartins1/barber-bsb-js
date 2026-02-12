@@ -1,3 +1,14 @@
+// import "@barberjs/env/web";
+// import type { NextConfig } from "next";
+
+// const nextConfig: NextConfig = {
+//   typedRoutes: true,
+//   reactCompiler: true,
+// };
+
+// export default nextConfig;
+
+
 import "@barberjs/env/web";
 import type { NextConfig } from "next";
 
