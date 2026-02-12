@@ -56,8 +56,12 @@ const app = new Elysia()
       exposeHeaders: ["Set-Cookie"],
     }),
   )
-  .all("/api/auth/*", async ({ request }) => {
-    return auth.handler(request);
+  .all("/api/auth/*", async (context) => {
+    const { request, status } = context;
+    if (["POST", "GET"].includes(request.method)) {
+      return auth.handler(request);
+    }
+    return status(405);
   })
   .post("/barber", (ctx) => createBarberController.handle(ctx), {
     body: createBarberBodySchema,
