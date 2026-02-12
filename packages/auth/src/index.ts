@@ -35,16 +35,19 @@ export const auth = betterAuth({
     },
   },
   advanced: {
+    // REMOVA ou coloque false em crossSubDomainCookies
+    crossSubDomainCookies: {
+      enabled: false,
+    },
     defaultCookieAttributes: {
       sameSite: "none",
       secure: true,
       httpOnly: true,
-      partitioned: true,
+      partitioned: true, // Isso ajuda no Chrome novo
     },
-    crossSubDomainCookies: {
-      enabled: true,
-    },
-    generateId: () => crypto.randomUUID(),
+    // ADICIONE useSecureCookies e trustProxy para garantir que o HTTPS seja respeitado
+    useSecureCookies: true,
   },
+  trustProxy: true,
   plugins: [],
 });
