@@ -4,6 +4,8 @@ import type { ISchedule } from "@/utils/ScheduleInterface";
 export class CreateScheduleService {
     async execute({
         userId,
+        userName,
+        userPhone,
         barberId,
         serviceId,
         date,
@@ -11,19 +13,25 @@ export class CreateScheduleService {
         status,
     }: ISchedule) {
 
-        if (!userId) throw new Error("User is required");
         if (!barberId) throw new Error("Barber is required");
         if (!serviceId) throw new Error("Service is required");
         if (!date) throw new Error("Date is required");
         if (!time) throw new Error("Time is required");
 
-        // usuário existe?
-        const userExists = await prisma.user.findUnique({
-            where: { id: userId },
-        });
+        // deve existir OU userId OU nome+telefone
+        if (!userId && (!userName || !userPhone)) {
+            throw new Error("Client information required");
+        }
 
-        if (!userExists) {
-            throw new Error("User not found");
+        // se userId existir, valida usuário
+        if (userId) {
+            const userExists = await prisma.user.findUnique({
+                where: { id: userId },
+            });
+
+            if (!userExists) {
+                throw new Error("User not found");
+            }
         }
 
         // barbeiro existe?
@@ -45,16 +53,16 @@ export class CreateScheduleService {
             throw new Error("Service not found");
         }
 
-        // barbeiro executa esse serviço?
+        // barbeiro executa serviço?
         const barberCanDoService = barberExists.services.some(
             s => s.id === serviceId
         );
 
         if (!barberCanDoService) {
-            throw new Error("This barber does not perform this service");
+            throw new Error("Barber does not perform this service");
         }
 
-        // verifica conflito de horário
+        // conflito de horário
         const appointmentConflict = await prisma.appointment.findFirst({
             where: {
                 barberId,
@@ -69,7 +77,9 @@ export class CreateScheduleService {
 
         const appointment = await prisma.appointment.create({
             data: {
-                userId,
+                userId: userId ?? null,
+                userName: userName ?? null,
+                userPhone: userPhone ?? null,
                 barberId,
                 serviceId,
                 date,
@@ -107,9 +117,11 @@ export class CreateScheduleService {
                         phone: true,
                     },
                 },
+
+                userName: true,
+                userPhone: true,
             },
         });
-
 
         return appointment;
     }

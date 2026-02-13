@@ -1,10 +1,23 @@
 import { GetAllBarberService } from "@/services/Barber/GetAllBarberService";
 
 export class GetAllBarberController {
-    async handle() {
-        const service = new GetAllBarberService();
-        const barber = await service.execute();
+    async handle({ set }: any) {
+        try {
+            const service = new GetAllBarberService();
+            const barbers = await service.execute();
 
-        return barber;
+            set.status = 200;
+
+            return {
+                message: "Barbers fetched successfully",
+                data: barbers,
+            };
+        } catch (error) {
+            set.status = 500;
+
+            return {
+                message: (error as Error).message,
+            };
+        }
     }
 }

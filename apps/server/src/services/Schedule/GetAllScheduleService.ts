@@ -1,6 +1,5 @@
 import { prisma } from "@barberjs/db";
 
-// Interface para definir os filtros que o serviço pode receber
 interface GetAllScheduleParams {
     date?: string;
     barberId?: string;
@@ -23,6 +22,10 @@ export class GetAllScheduleService {
                 date: true,
                 time: true,
                 status: true,
+
+                // ✅ CLIENTE SEM CONTA
+                userName: true,
+                userPhone: true,
 
                 barber: {
                     select: {

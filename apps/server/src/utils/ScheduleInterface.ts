@@ -1,6 +1,8 @@
 export interface ISchedule {
     id?: string;
-    userId: string;
+    userId?: string; // Opcional se for agendamento manual
+    userName?: string; // Nome do cliente avulso
+    userPhone?: string; // Telefone do cliente avulso
     barberId: string;
     serviceId: string;
     date: Date;

@@ -11,7 +11,12 @@ export class GetOneScheduleController {
             const service = new GetOneScheduleService();
             const appointment = await service.execute(params.id);
 
-            return appointment;
+            set.status = 200;
+
+            return {
+                message: "Appointment fetched successfully",
+                data: appointment,
+            };
         } catch (error) {
             set.status = 404;
 

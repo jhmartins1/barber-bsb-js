@@ -27,6 +27,7 @@ export class UpdateScheduleService {
 
         // barbeiro alterado?
         let barber = appointmentExists.barber;
+
         if (barberId && barberId !== appointmentExists.barberId) {
             const barberExists = await prisma.barber.findUnique({
                 where: { id: barberId },
@@ -61,22 +62,29 @@ export class UpdateScheduleService {
             }
         }
 
-        // valida conflito se mudar data, hora ou barbeiro
+        // valores finais
         const finalBarberId = barberId ?? appointmentExists.barberId;
         const finalDate = date ?? appointmentExists.date;
         const finalTime = time ?? appointmentExists.time;
 
-        const conflict = await prisma.appointment.findFirst({
-            where: {
-                barberId: finalBarberId,
-                date: finalDate,
-                time: finalTime,
-                NOT: { id },
-            },
-        });
+        // valida conflito somente se mudou algo relevante
+        if (
+            finalBarberId !== appointmentExists.barberId ||
+            finalDate.getTime() !== appointmentExists.date.getTime() ||
+            finalTime !== appointmentExists.time
+        ) {
+            const conflict = await prisma.appointment.findFirst({
+                where: {
+                    barberId: finalBarberId,
+                    date: finalDate,
+                    time: finalTime,
+                    NOT: { id },
+                },
+            });
 
-        if (conflict) {
-            throw new Error("This time is already booked");
+            if (conflict) {
+                throw new Error("This time is already booked");
+            }
         }
 
         const updatedAppointment = await prisma.appointment.update({

@@ -81,14 +81,19 @@ model Appointment {
 
   status AppointmentStatus @default(AGENDADO)
 
+  // Campos para clientes sem cadastro
+  userName  String?
+  userPhone String?
+
   serviceId String
   service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
   barberId String
   barber   Barber @relation(fields: [barberId], references: [id], onDelete: Cascade)
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // userId agora é opcional (?) para permitir agendamentos manuais
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

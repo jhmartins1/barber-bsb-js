@@ -10,9 +10,14 @@ export class DeleteScheduleController {
         try {
             const service = new DeleteScheduleService();
 
-            const result = await service.execute(params.id);
+            const appointment = await service.execute(params.id);
 
-            return result;
+            set.status = 200;
+
+            return {
+                message: "Appointment deleted successfully",
+                data: appointment,
+            };
         } catch (error) {
             set.status = 404;
 
