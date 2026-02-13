@@ -8,6 +8,31 @@ export class DeleteScheduleService {
 
         const appointmentExists = await prisma.appointment.findUnique({
             where: { id },
+            include: {
+                barber: {
+                    select: {
+                        id: true,
+                        name: true,
+                        phone: true,
+                    },
+                },
+                service: {
+                    select: {
+                        id: true,
+                        name: true,
+                        price: true,
+                        duration: true,
+                    },
+                },
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        phone: true,
+                    },
+                },
+            },
         });
 
         if (!appointmentExists) {
@@ -18,8 +43,6 @@ export class DeleteScheduleService {
             where: { id },
         });
 
-        return {
-            message: "Appointment deleted successfully",
-        };
+        return appointmentExists;
     }
 }

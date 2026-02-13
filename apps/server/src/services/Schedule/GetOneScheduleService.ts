@@ -8,7 +8,16 @@ export class GetOneScheduleService {
 
         const appointment = await prisma.appointment.findUnique({
             where: { id },
-            include: {
+            select: {
+                id: true,
+                date: true,
+                time: true,
+                status: true,
+
+                // ✅ CLIENTE AVULSO
+                userName: true,
+                userPhone: true,
+
                 barber: {
                     select: {
                         id: true,
@@ -16,6 +25,7 @@ export class GetOneScheduleService {
                         phone: true,
                     },
                 },
+
                 service: {
                     select: {
                         id: true,
@@ -24,6 +34,7 @@ export class GetOneScheduleService {
                         duration: true,
                     },
                 },
+
                 user: {
                     select: {
                         id: true,
