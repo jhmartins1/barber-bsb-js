@@ -63,36 +63,64 @@ export default function Dashboard({
 
   useEffect(() => {
     async function loadServices() {
-      const response = await fetch(`${API_URL}/service`);
-      const data = await response.json();
-      setServices(data);
+      try {
+        const response = await fetch(`${API_URL}/service`);
+        const result = await response.json();
+
+        // aceita tanto array direto quanto { data: array }
+        const servicesArray = Array.isArray(result)
+          ? result
+          : Array.isArray(result.data)
+            ? result.data
+            : [];
+
+        setServices(servicesArray);
+      } catch (error) {
+        console.error("Erro ao carregar serviços:", error);
+        setServices([]);
+      }
     }
+
     loadServices();
   }, []);
+
+
 
   // Busca horários ocupados filtrados
   useEffect(() => {
     if (!date || !barber) return;
 
     async function loadBusyTimes() {
-      setBusyTimes([]); // Limpa antes de carregar novos para evitar confusão
+      setBusyTimes([]);
+
       const response = await fetch(
         `${API_URL}/schedule?date=${date}&barberId=${barber}`
       );
 
       if (!response.ok) return;
 
-      const schedules = await response.json();
-      setBusyTimes(schedules.map((s: any) => s.time));
+      const result = await response.json();
+
+      const schedulesArray = Array.isArray(result)
+        ? result
+        : Array.isArray(result.data)
+          ? result.data
+          : [];
+
+      setBusyTimes(schedulesArray.map((s: any) => s.time));
     }
 
     loadBusyTimes();
   }, [date, barber]);
 
+
   const selectedService = useMemo(
-    () => services.find((s) => s.id === service),
+    () => Array.isArray(services)
+      ? services.find((s) => s.id === service)
+      : undefined,
     [service, services]
   );
+
 
   const availableBarbers = useMemo(() => {
     if (!selectedService) return [];
