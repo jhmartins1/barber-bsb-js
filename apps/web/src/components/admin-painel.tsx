@@ -63,8 +63,6 @@ import {
 
 import { toast } from "sonner";
 
-
-// --- Tipagens ---
 export type ScheduleStatus = "AGENDADO" | "CONFIRMADO" | "CANCELADO";
 
 export type Schedule = {
@@ -74,21 +72,23 @@ export type Schedule = {
     status: ScheduleStatus;
     barber: { id: string; name: string };
     service: { id: string; name: string; price: number };
-    user: { id: string; name: string };
+    user?: { id: string; name: string } | null;
+    userName?: string | null;
+    userPhone?: string | null;
 };
 
 type OptionItem = { id: string; name: string };
 
-// Tipagem da Session para o page.tsx
 interface AdminPainelProps {
     session: any;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_SERVER_URL!;
 
-// Lista de horários padrão para o Dropdown
 const AVAILABLE_TIMES = [
-    "08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"
+    "08:00", "09:00", "10:00", "11:00",
+    "14:00", "15:00", "16:00", "17:00",
+    "18:00", "19:00", "20:00"
 ];
 
 const statusConfig = {
@@ -102,7 +102,6 @@ export default function AdminPainel({ session }: AdminPainelProps) {
     const [loading, setLoading] = React.useState(true);
     const [sorting, setSorting] = React.useState<SortingState>([]);
 
-    // Estados de Edição
     const [isEditOpen, setIsEditOpen] = React.useState(false);
     const [editingId, setEditingId] = React.useState<string | null>(null);
     const [barbersList, setBarbersList] = React.useState<OptionItem[]>([]);
@@ -110,7 +109,6 @@ export default function AdminPainel({ session }: AdminPainelProps) {
 
     const [deleteId, setDeleteId] = React.useState<string | null>(null);
     const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
-
 
     const [editForm, setEditForm] = React.useState({
         barberId: "",
@@ -120,17 +118,22 @@ export default function AdminPainel({ session }: AdminPainelProps) {
         status: "AGENDADO" as ScheduleStatus
     });
 
-    // --- Busca de Dados ---
+    // ---------------- FETCH ----------------
+
     const fetchData = async () => {
         setLoading(true);
+
         try {
             const res = await fetch(`${API_URL}/schedule`);
-            if (res.ok) {
-                const json = await res.json();
-                setData(Array.isArray(json) ? json : json.data || []);
-            }
-        } catch (e) { console.error(e); }
-        setLoading(false);
+            if (!res.ok) throw new Error();
+
+            const json = await res.json();
+            setData(json.data ?? []);
+        } catch {
+            toast.error("Erro ao carregar agendamentos");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const fetchAuxData = async () => {
@@ -139,9 +142,19 @@ export default function AdminPainel({ session }: AdminPainelProps) {
                 fetch(`${API_URL}/barber`),
                 fetch(`${API_URL}/service`)
             ]);
-            if (resBarber.ok) setBarbersList(await resBarber.json());
-            if (resService.ok) setServicesList(await resService.json());
-        } catch (e) { console.error(e); }
+
+            if (resBarber.ok) {
+                const json = await resBarber.json();
+                setBarbersList(json.data ?? []);
+            }
+
+            if (resService.ok) {
+                const json = await resService.json();
+                setServicesList(json.data ?? []);
+            }
+        } catch {
+            toast.error("Erro ao carregar dados auxiliares");
+        }
     };
 
     React.useEffect(() => {
@@ -149,19 +162,21 @@ export default function AdminPainel({ session }: AdminPainelProps) {
         fetchAuxData();
     }, []);
 
-    // Formata T2000 para 20:00
+    // ---------------- UTILS ----------------
+
     const formatTimeForSelect = (timeStr: string) => {
         const digits = timeStr.replace(/\D/g, "");
-        if (digits.length === 4) return `${digits.slice(0, 2)}:${digits.slice(2)}`;
+        if (digits.length === 4)
+            return `${digits.slice(0, 2)}:${digits.slice(2)}`;
         return timeStr;
     };
+
+    // ---------------- EDIT ----------------
 
     const handleEditClick = (row: Schedule) => {
         setEditingId(row.id);
 
-        // Converte data para formato do input HTML (yyyy-MM-dd)
-        const dateObj = new Date(row.date);
-        const dateStr = dateObj.toISOString().split('T')[0];
+        const dateStr = row.date.slice(0, 10);
 
         setEditForm({
             barberId: row.barber?.id || "",
@@ -170,21 +185,22 @@ export default function AdminPainel({ session }: AdminPainelProps) {
             time: formatTimeForSelect(row.time),
             status: row.status
         });
+
         setIsEditOpen(true);
     };
 
     const handleUpdate = async () => {
         if (!editingId) return;
+
         try {
             const cleanTime = editForm.time.replace(":", "");
-            const formattedTimeForEnum = `T${cleanTime}`;
+            const formattedTime = `T${cleanTime}`;
 
             const payload = {
-                id: editingId,
                 barberId: editForm.barberId,
                 serviceId: editForm.serviceId,
                 date: new Date(editForm.date).toISOString(),
-                time: formattedTimeForEnum,
+                time: formattedTime,
                 status: editForm.status
             };
 
@@ -195,14 +211,19 @@ export default function AdminPainel({ session }: AdminPainelProps) {
             });
 
             if (res.ok) {
+                toast.success("Agendamento atualizado");
                 setIsEditOpen(false);
                 fetchData();
             } else {
                 const err = await res.json();
-                alert(`Erro: ${err.message}`);
+                toast.error(err.message || "Erro ao atualizar");
             }
-        } catch (e) { alert("Erro ao conectar com o servidor."); }
+        } catch {
+            toast.error("Erro de conexão");
+        }
     };
+
+    // ---------------- DELETE ----------------
 
     const handleDelete = async () => {
         if (!deleteId) return;
@@ -213,25 +234,25 @@ export default function AdminPainel({ session }: AdminPainelProps) {
             });
 
             if (res.ok) {
-                toast.success("Agendamento excluído com sucesso.");
-
+                toast.success("Agendamento excluído");
                 fetchData();
             } else {
-                toast.error("Erro ao excluir.");
+                toast.error("Erro ao excluir");
             }
         } catch {
-            toast.error("Erro de conexão.");
+            toast.error("Erro de conexão");
         }
 
         setIsDeleteOpen(false);
         setDeleteId(null);
     };
 
+    // ---------------- TABLE ----------------
 
     const columns: ColumnDef<Schedule>[] = [
         {
             id: "clientName",
-            accessorFn: (row) => row.user?.name,
+            accessorFn: (row) => row.user?.name ?? row.userName,
             header: ({ column }) => (
                 <Button
                     variant="ghost"
@@ -245,7 +266,7 @@ export default function AdminPainel({ session }: AdminPainelProps) {
             ),
             cell: ({ row }) => (
                 <span className="font-medium">
-                    {row.original.user?.name}
+                    {row.original.user?.name ?? row.original.userName ?? "—"}
                 </span>
             ),
         },
@@ -300,7 +321,9 @@ export default function AdminPainel({ session }: AdminPainelProps) {
             ),
             cell: ({ row }) => (
                 <span>
-                    {new Date(row.original.date).toLocaleDateString("pt-BR")}
+                    {new Date(row.original.date).toLocaleDateString("pt-BR", {
+                        timeZone: "UTC",
+                    })}
                 </span>
             ),
         },
@@ -313,43 +336,17 @@ export default function AdminPainel({ session }: AdminPainelProps) {
                     onClick={() =>
                         column.toggleSorting(column.getIsSorted() === "asc")
                     }
-                >
-                    Horário <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
+                >Horário <ArrowUpDown className="ml-2 h-4 w-4" /></Button>
             ),
-            cell: ({ row }) => (
-                <div className="flex items-center gap-1 font-mono text-sm">
-                    <Clock className="w-3.5 h-3.5" />
-                    {formatTimeForSelect(row.original.time)}
-                </div>
-            ),
+            cell: ({ row }) => formatTimeForSelect(row.original.time),
         },
         {
             accessorKey: "status",
-            header: ({ column }) => (
-                <Button
-                    variant="ghost"
-                    className="p-0"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === "asc")
-                    }
-                >
-                    Status <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            ),
+            header: () => "Status",
             cell: ({ row }) => {
-                const config =
-                    statusConfig[row.original.status] || {
-                        label: row.original.status,
-                        variant: "outline",
-                        className: "",
-                    };
-
+                const config = statusConfig[row.original.status];
                 return (
-                    <Badge
-                        variant={config.variant}
-                        className={config.className}
-                    >
+                    <Badge variant={config.variant} className={config.className}>
                         {config.label}
                     </Badge>
                 );
@@ -357,7 +354,6 @@ export default function AdminPainel({ session }: AdminPainelProps) {
         },
         {
             id: "actions",
-            enableSorting: false,
             header: () => <div className="text-right">Ações</div>,
             cell: ({ row }) => (
                 <div className="flex justify-end gap-2">
@@ -385,40 +381,57 @@ export default function AdminPainel({ session }: AdminPainelProps) {
         },
     ];
 
-
     const table = useReactTable({
         data,
         columns,
         getCoreRowModel: getCoreRowModel(),
-        onSortingChange: setSorting,
         getSortedRowModel: getSortedRowModel(),
         state: { sorting },
+        onSortingChange: setSorting,
     });
 
     return (
         <div className="w-full max-w-6xl p-6 space-y-8">
-            <Card className="border-none shadow-xl bg-card/40 backdrop-blur-md">
-                <CardHeader><CardTitle className="flex items-center gap-2"><CalendarIcon className="w-6 h-6 text-primary" /> Painel Geral</CardTitle></CardHeader>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Painel Geral</CardTitle>
+                </CardHeader>
+
                 <CardContent>
-                    <div className="rounded-xl border bg-background/50 overflow-hidden">
-                        <Table>
-                            <TableHeader className="bg-muted/50">
-                                {table.getHeaderGroups().map(hg => (
-                                    <TableRow key={hg.id}>{hg.headers.map(h => (
-                                        <TableHead key={h.id}>{flexRender(h.column.columnDef.header, h.getContext())}</TableHead>
-                                    ))}</TableRow>
-                                ))}
-                            </TableHeader>
-                            <TableBody>
-                                {loading ? <TableRow><TableCell colSpan={7} className="h-32 text-center"><Loader2 className="animate-spin inline mr-2" /> Carregando...</TableCell></TableRow> :
-                                    table.getRowModel().rows.map(row => (
-                                        <TableRow key={row.id}>{row.getVisibleCells().map(cell => (
-                                            <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-                                        ))}</TableRow>
+                    <Table>
+                        <TableHeader>
+                            {table.getHeaderGroups().map(hg => (
+                                <TableRow key={hg.id}>
+                                    {hg.headers.map(h => (
+                                        <TableHead key={h.id}>
+                                            {flexRender(h.column.columnDef.header, h.getContext())}
+                                        </TableHead>
                                     ))}
-                            </TableBody>
-                        </Table>
-                    </div>
+                                </TableRow>
+                            ))}
+                        </TableHeader>
+
+                        <TableBody>
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell colSpan={7} className="text-center">
+                                        <Loader2 className="animate-spin inline mr-2" />
+                                        Carregando...
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                table.getRowModel().rows.map(row => (
+                                    <TableRow key={row.id}>
+                                        {row.getVisibleCells().map(cell => (
+                                            <TableCell key={cell.id}>
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
 
@@ -523,7 +536,6 @@ export default function AdminPainel({ session }: AdminPainelProps) {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-
         </div>
     );
 }
