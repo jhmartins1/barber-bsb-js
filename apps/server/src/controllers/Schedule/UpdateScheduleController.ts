@@ -30,7 +30,12 @@ export class UpdateScheduleController {
                 date: body.date ? new Date(body.date) : undefined,
             });
 
-            return appointment;
+            set.status = 200;
+
+            return {
+                message: "Appointment updated successfully",
+                data: appointment,
+            };
         } catch (error) {
             set.status = 400;
 
