@@ -67,13 +67,13 @@ const app = new Elysia()
     body: createBarberBodySchema,
   })
   .get("/barber/:id", (ctx) => getOneBarberController.handle(ctx))
-  .get("/barber", () => getAllBarberController.handle())
+  .get("/barber", (ctx) => getAllBarberController.handle(ctx))
   .put("/barber/:id", (ctx) => updateBarberController.handle(ctx))
   .delete("/barber/:id", (ctx) => deleteBarberController.handle(ctx))
   .post("/service", (ctx) => createBServiceController.handle(ctx), {
     body: createServiceBodySchema,
   })
-  .get("/service", () => getAllBServiceController.handle())
+  .get("/service", (ctx) => getAllBServiceController.handle(ctx))
   .get("/service/:id", (ctx) => getOneBServiceController.handle(ctx))
   .put("/service/:id", (ctx) => updateBServiceController.handle(ctx))
   .delete("/service/:id", (ctx) => deleteBServiceController.handle(ctx))
