@@ -4,20 +4,30 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="text-center mt-6 space-y-6">
-      <h1 className="text-3xl font-bold">
-        Welcome to Barber BSB
-      </h1>
+    <main className="flex flex-col items-center px-6 py-12 text-center space-y-8">
+      {/* HERO */}
+      <div className="space-y-3 max-w-2xl">
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+          Barber BSB
+        </h1>
 
-      <div className="flex justify-center">
+        <p className="text-muted-foreground text-lg">
+          Agende seu corte de forma rápida e moderna.
+          Profissionais qualificados e experiência premium.
+        </p>
+      </div>
+
+      {/* IMAGE */}
+      <div className="w-full max-w-4xl rounded-2xl overflow-hidden shadow-xl">
         <Image
           src="/barbershop.jpg"
           alt="Barbearia"
-          width={900}
-          height={500}
-          className="rounded-xl object-cover"
+          width={1200}
+          height={600}
+          className="object-cover w-full h-[420px]"
+          priority
         />
       </div>
-    </div>
+    </main>
   );
 }
