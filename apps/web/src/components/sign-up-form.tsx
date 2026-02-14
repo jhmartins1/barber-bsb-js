@@ -1,3 +1,5 @@
+"use client";
+
 import { useForm } from "@tanstack/react-form";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -41,147 +43,151 @@ export default function SignUpForm() {
         {
           onSuccess: () => {
             router.push("/dashboard");
-            toast.success("Sign up successful");
+            toast.success("Conta criada com sucesso");
           },
           onError: (error) => {
             toast.error(error.error.message || error.error.statusText);
           },
-        },
+        }
       );
     },
     validators: {
-      onSubmit: signUpSchema
+      onSubmit: signUpSchema,
     },
   });
 
-  if (isPending) {
-    return <Loader />;
-  }
+  if (isPending) return <Loader />;
 
   return (
-    <div className="mx-auto w-full mt-10 max-w-md p-6">
-      <h1 className="mb-6 text-center text-3xl font-bold">Cadastro</h1>
+    <div className="min-h-[calc(100vh-60px)] flex items-center justify-center px-4">
+      <div className="w-full max-w-lg bg-background border rounded-2xl shadow-xl p-8 space-y-6">
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
-        className="space-y-6"
-      >
-        <div>
+        <h1 className="text-center text-4xl font-bold text-primary">
+          Criar Conta
+        </h1>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            form.handleSubmit();
+          }}
+          className="space-y-5"
+        >
+          {/* NOME */}
           <form.Field name="name">
             {(field) => (
               <div className="space-y-2">
                 <Label htmlFor={field.name}>Nome</Label>
                 <Input
                   id={field.name}
-                  name={field.name}
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
+                  onChange={(e) =>
+                    field.handleChange(e.target.value)
+                  }
                 />
                 {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
+                  <p key={error?.message} className="text-sm text-red-500">
                     {error?.message}
                   </p>
                 ))}
               </div>
             )}
           </form.Field>
-        </div>
 
-        <div>
+          {/* TELEFONE */}
           <form.Field name="phone">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor={field.name}>Telefone</Label>
+                <Label>Telefone</Label>
                 <IMaskInput
                   mask="(00) 00000-0000"
                   value={field.state.value}
-                  onAccept={(value) => field.handleChange(value)}
+                  onAccept={(value) =>
+                    field.handleChange(value)
+                  }
                   onBlur={field.handleBlur}
                   placeholder="(00) 00000-0000"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-11 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
                 />
                 {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
+                  <p key={error?.message} className="text-sm text-red-500">
                     {error?.message}
                   </p>
                 ))}
               </div>
             )}
           </form.Field>
-        </div>
 
-        <div>
+          {/* EMAIL */}
           <form.Field name="email">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor={field.name}>Email</Label>
+                <Label>Email</Label>
                 <Input
-                  id={field.name}
-                  name={field.name}
                   type="email"
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
+                  onChange={(e) =>
+                    field.handleChange(e.target.value)
+                  }
                 />
                 {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
+                  <p key={error?.message} className="text-sm text-red-500">
                     {error?.message}
                   </p>
                 ))}
               </div>
             )}
           </form.Field>
-        </div>
 
-        <div>
+          {/* SENHA */}
           <form.Field name="password">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor={field.name}>Senha</Label>
+                <Label>Senha</Label>
                 <Input
-                  id={field.name}
-                  name={field.name}
                   type="password"
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
+                  onChange={(e) =>
+                    field.handleChange(e.target.value)
+                  }
                 />
                 {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
+                  <p key={error?.message} className="text-sm text-red-500">
                     {error?.message}
                   </p>
                 ))}
               </div>
             )}
           </form.Field>
+
+          <form.Subscribe>
+            {(state) => (
+              <Button
+                type="submit"
+                className="w-full h-11 text-lg"
+                disabled={!state.canSubmit || state.isSubmitting}
+              >
+                {state.isSubmitting
+                  ? "Criando conta..."
+                  : "Cadastrar"}
+              </Button>
+            )}
+          </form.Subscribe>
+        </form>
+
+        <div className="text-center">
+          <Button
+            variant="link"
+            onClick={() => router.push("/login")}
+          >
+            Já tem uma conta? Entrar
+          </Button>
         </div>
 
-        <form.Subscribe>
-          {(state) => (
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={!state.canSubmit || state.isSubmitting}
-            >
-              {state.isSubmitting ? "Submitting..." : "Cadastrar"}
-            </Button>
-          )}
-        </form.Subscribe>
-      </form>
-
-      <div className="mt-4 text-center">
-        <Button
-          variant="link"
-          className="text-indigo-600 hover:text-indigo-800"
-          onClick={() => router.push("/login")}
-        >
-          Já tem uma conta? Entrar
-        </Button>
       </div>
     </div>
   );
