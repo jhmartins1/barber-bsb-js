@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-
 import { ModeToggle } from "./mode-toggle";
 import UserMenu from "./user-menu";
 import { authClient } from "@/lib/auth-client";
@@ -17,6 +16,12 @@ export default function Header() {
           {session?.user && (
             <Link href="/dashboard">
               Agendamento
+            </Link>
+          )}
+
+          {session?.user && (
+            <Link href="/admin">
+              Admin
             </Link>
           )}
         </nav>
