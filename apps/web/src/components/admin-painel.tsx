@@ -1,5 +1,8 @@
 "use client";
 
+import { getScheduleColumns } from "@/app/admin/schedule-columns";
+import { useSchedules } from "@/app/hooks/useSchedules";
+import { EditScheduleDialog } from "@/app/admin/edit-schedule-dialog";
 import * as React from "react";
 import {
     flexRender,
@@ -14,26 +17,11 @@ import type {
 } from "@tanstack/react-table";
 
 import {
-    ArrowUpDown,
-    Trash2,
-    Pencil,
     Calendar as CalendarIcon,
-    Clock,
     Loader2
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import {
     Table,
     TableBody,
@@ -42,14 +30,6 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-    DialogDescription,
-} from "@/components/ui/dialog";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -77,8 +57,6 @@ export type Schedule = {
     userPhone?: string | null;
 };
 
-type OptionItem = { id: string; name: string };
-
 interface AdminPainelProps {
     session: any;
 }
@@ -91,22 +69,11 @@ const AVAILABLE_TIMES = [
     "18:00", "19:00", "20:00"
 ];
 
-const statusConfig = {
-    AGENDADO: { label: "Agendado", variant: "outline" as const, className: "bg-yellow-500/10 text-yellow-600 border-yellow-200" },
-    CONFIRMADO: { label: "Confirmado", variant: "default" as const, className: "bg-green-500/10 text-green-600 border-green-200" },
-    CANCELADO: { label: "Cancelado", variant: "destructive" as const, className: "" },
-};
-
 export default function AdminPainel({ session }: AdminPainelProps) {
-    const [data, setData] = React.useState<Schedule[]>([]);
-    const [loading, setLoading] = React.useState(true);
+    const { data, setData, barbers, services, loading, fetchData, deleteSchedule, isDeleting } = useSchedules(API_URL);
     const [sorting, setSorting] = React.useState<SortingState>([]);
-
     const [isEditOpen, setIsEditOpen] = React.useState(false);
     const [editingId, setEditingId] = React.useState<string | null>(null);
-    const [barbersList, setBarbersList] = React.useState<OptionItem[]>([]);
-    const [servicesList, setServicesList] = React.useState<OptionItem[]>([]);
-
     const [deleteId, setDeleteId] = React.useState<string | null>(null);
     const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
 
@@ -117,50 +84,6 @@ export default function AdminPainel({ session }: AdminPainelProps) {
         time: "",
         status: "AGENDADO" as ScheduleStatus
     });
-
-    // ---------------- FETCH ----------------
-
-    const fetchData = async () => {
-        setLoading(true);
-
-        try {
-            const res = await fetch(`${API_URL}/schedule`);
-            if (!res.ok) throw new Error();
-
-            const json = await res.json();
-            setData(json.data ?? []);
-        } catch {
-            toast.error("Erro ao carregar agendamentos");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchAuxData = async () => {
-        try {
-            const [resBarber, resService] = await Promise.all([
-                fetch(`${API_URL}/barber`),
-                fetch(`${API_URL}/service`)
-            ]);
-
-            if (resBarber.ok) {
-                const json = await resBarber.json();
-                setBarbersList(json.data ?? []);
-            }
-
-            if (resService.ok) {
-                const json = await resService.json();
-                setServicesList(json.data ?? []);
-            }
-        } catch {
-            toast.error("Erro ao carregar dados auxiliares");
-        }
-    };
-
-    React.useEffect(() => {
-        fetchData();
-        fetchAuxData();
-    }, []);
 
     // ---------------- UTILS ----------------
 
@@ -228,158 +151,25 @@ export default function AdminPainel({ session }: AdminPainelProps) {
     const handleDelete = async () => {
         if (!deleteId) return;
 
-        try {
-            const res = await fetch(`${API_URL}/schedule/${deleteId}`, {
-                method: "DELETE",
-            });
-
-            if (res.ok) {
-                toast.success("Agendamento excluído");
-                fetchData();
-            } else {
-                toast.error("Erro ao excluir");
-            }
-        } catch {
-            toast.error("Erro de conexão");
-        }
+        await deleteSchedule(deleteId);
 
         setIsDeleteOpen(false);
         setDeleteId(null);
     };
 
+
     // ---------------- TABLE ----------------
 
-    const columns: ColumnDef<Schedule>[] = [
-        {
-            id: "clientName",
-            accessorFn: (row) => row.user?.name ?? row.userName,
-            header: ({ column }) => (
-                <Button
-                    variant="ghost"
-                    className="p-0"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === "asc")
-                    }
-                >
-                    Cliente <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            ),
-            cell: ({ row }) => (
-                <span className="font-medium">
-                    {row.original.user?.name ?? row.original.userName ?? "—"}
-                </span>
-            ),
-        },
-        {
-            id: "barberName",
-            accessorFn: (row) => row.barber?.name,
-            header: ({ column }) => (
-                <Button
-                    variant="ghost"
-                    className="p-0"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === "asc")
-                    }
-                >
-                    Barbeiro <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            ),
-            cell: ({ row }) => <span>{row.original.barber?.name}</span>,
-        },
-        {
-            id: "serviceName",
-            accessorFn: (row) => row.service?.name,
-            header: ({ column }) => (
-                <Button
-                    variant="ghost"
-                    className="p-0"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === "asc")
-                    }
-                >
-                    Serviço <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            ),
-            cell: ({ row }) => (
-                <Badge variant="secondary">
-                    {row.original.service?.name}
-                </Badge>
-            ),
-        },
-        {
-            accessorKey: "date",
-            header: ({ column }) => (
-                <Button
-                    variant="ghost"
-                    className="p-0"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === "asc")
-                    }
-                >
-                    Data <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            ),
-            cell: ({ row }) => (
-                <span>
-                    {new Date(row.original.date).toLocaleDateString("pt-BR", {
-                        timeZone: "UTC",
-                    })}
-                </span>
-            ),
-        },
-        {
-            accessorKey: "time",
-            header: ({ column }) => (
-                <Button
-                    variant="ghost"
-                    className="p-0"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === "asc")
-                    }
-                >Horário <ArrowUpDown className="ml-2 h-4 w-4" /></Button>
-            ),
-            cell: ({ row }) => formatTimeForSelect(row.original.time),
-        },
-        {
-            accessorKey: "status",
-            header: () => "Status",
-            cell: ({ row }) => {
-                const config = statusConfig[row.original.status];
-                return (
-                    <Badge variant={config.variant} className={config.className}>
-                        {config.label}
-                    </Badge>
-                );
-            },
-        },
-        {
-            id: "actions",
-            header: () => <div className="text-right">Ações</div>,
-            cell: ({ row }) => (
-                <div className="flex justify-end gap-2">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEditClick(row.original)}
-                    >
-                        <Pencil className="h-4 w-4" />
-                    </Button>
+    const columns = React.useMemo(
+        () =>
+            getScheduleColumns({
+                handleEditClick,
+                setDeleteId,
+                setIsDeleteOpen,
+            }),
+        [handleEditClick]
+    );
 
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive"
-                        onClick={() => {
-                            setDeleteId(row.original.id);
-                            setIsDeleteOpen(true);
-                        }}
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                </div>
-            ),
-        },
-    ];
 
     const table = useReactTable({
         data,
@@ -435,87 +225,16 @@ export default function AdminPainel({ session }: AdminPainelProps) {
                 </CardContent>
             </Card>
 
-            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-                <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                        <DialogTitle>Editar Agendamento</DialogTitle>
-                        <DialogDescription>Altere as informações abaixo.</DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        {/* Status */}
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label className="text-right">Status</Label>
-                            <Select value={editForm.status} onValueChange={(val) => val && setEditForm({ ...editForm, status: val as ScheduleStatus })}>
-                                <SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="AGENDADO">Agendado</SelectItem>
-                                    <SelectItem value="CONFIRMADO">Confirmado</SelectItem>
-                                    <SelectItem value="CANCELADO">Cancelado</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        {/* Barbeiro - CORRIGIDO TIPAGEM */}
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label className="text-right">Barbeiro</Label>
-                            <Select
-                                value={editForm.barberId}
-                                onValueChange={(val) => { if (val) setEditForm({ ...editForm, barberId: val }) }}
-                            >
-                                <SelectTrigger className="col-span-3">
-                                    <SelectValue placeholder="Selecione o barbeiro" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {barbersList.map(b => (
-                                        <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        {/* Serviço - CORRIGIDO TIPAGEM */}
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label className="text-right">Serviço</Label>
-                            <Select
-                                value={editForm.serviceId}
-                                onValueChange={(val) => { if (val) setEditForm({ ...editForm, serviceId: val }) }}
-                            >
-                                <SelectTrigger className="col-span-3">
-                                    <SelectValue placeholder="Selecione o serviço" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {servicesList.map(s => (
-                                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        {/* Data */}
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label className="text-right">Data</Label>
-                            <Input
-                                type="date"
-                                className="col-span-3"
-                                value={editForm.date}
-                                onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
-                            />
-                        </div>
-
-                        {/* Hora Dropdown */}
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label className="text-right">Hora</Label>
-                            <Select value={editForm.time} onValueChange={(val) => val && setEditForm({ ...editForm, time: val })}>
-                                <SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    {AVAILABLE_TIMES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                    <DialogFooter><Button onClick={handleUpdate}>Salvar Alterações</Button></DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <EditScheduleDialog
+                open={isEditOpen}
+                setOpen={setIsEditOpen}
+                form={editForm}
+                setForm={setEditForm}
+                barbers={barbers}
+                services={services}
+                availableTimes={AVAILABLE_TIMES}
+                onSave={handleUpdate}
+            />
 
             <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
                 <AlertDialogContent>
