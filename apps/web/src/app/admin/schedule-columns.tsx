@@ -186,7 +186,20 @@ export function getScheduleColumns({
         },
         {
             accessorKey: "status",
-            header: () => "Status",
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    className="p-0"
+                    onClick={() =>
+                        column.toggleSorting(
+                            column.getIsSorted() === "asc"
+                        )
+                    }
+                >
+                    Status
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
             cell: ({ row }) => {
                 const config =
                     statusConfig[row.original.status];
