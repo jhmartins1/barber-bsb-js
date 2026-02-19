@@ -1,11 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, Loader2 } from "lucide-react";
 import { getScheduleColumns } from "@/app/admin/schedule-columns";
 import { EditScheduleDialog } from "@/app/admin/edit-schedule-dialog";
 import { useSchedules } from "@/app/hooks/useSchedules";
-
 import * as React from "react";
 import {
     flexRender,
@@ -13,19 +12,13 @@ import {
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table";
-
 import type { SortingState } from "@tanstack/react-table";
 import type { ScheduleStatus } from "@/app/types/schedule";
-
-import { Loader2 } from "lucide-react";
-
 import {
     Card,
     CardContent,
     CardHeader,
-    CardTitle,
 } from "@/components/ui/card";
-
 import {
     Table,
     TableBody,
@@ -34,7 +27,6 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-
 import {
     AlertDialog,
     AlertDialogAction,
@@ -47,6 +39,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import Link from "next/link";
 
 const API_URL = process.env.NEXT_PUBLIC_SERVER_URL!;
 
@@ -60,6 +53,7 @@ type EditFormType = {
 
 export function DataTableSchedules() {
     const router = useRouter();
+
     const {
         data,
         barbers,
@@ -91,8 +85,7 @@ export function DataTableSchedules() {
 
     const formatTimeForSelect = (timeStr: string) => {
         const digits = timeStr.replace(/\D/g, "");
-        if (digits.length === 4)
-            return `${digits.slice(0, 2)}:${digits.slice(2)}`;
+        if (digits.length === 4) return `${digits.slice(0, 2)}:${digits.slice(2)}`;
         return timeStr;
     };
 
@@ -117,20 +110,17 @@ export function DataTableSchedules() {
             const cleanTime = editForm.time.replace(":", "");
             const formattedTime = `T${cleanTime}`;
 
-            const res = await fetch(
-                `${API_URL}/schedule/${editingId}`,
-                {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        barberId: editForm.barberId,
-                        serviceId: editForm.serviceId,
-                        date: new Date(editForm.date).toISOString(),
-                        time: formattedTime,
-                        status: editForm.status,
-                    }),
-                }
-            );
+            const res = await fetch(`${API_URL}/schedule/${editingId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    barberId: editForm.barberId,
+                    serviceId: editForm.serviceId,
+                    date: new Date(editForm.date).toISOString(),
+                    time: formattedTime,
+                    status: editForm.status,
+                }),
+            });
 
             if (res.ok) {
                 toast.success("Agendamento atualizado");
@@ -173,98 +163,105 @@ export function DataTableSchedules() {
 
     return (
         <>
-            <Card className="w-full shadow-sm border">
-                <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                    <Button
-                        variant="outline"
-                        className="gap-2"
-                        onClick={() => router.push("/admin")}
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Voltar ao painel
-                    </Button>
+            <div className="p-6 md:p-8">
+                <Card className="mx-auto w-full max-w-7xl rounded-2xl shadow-sm border">
 
-                    <Button
-                        className="gap-2"
-                        onClick={() => {
-                            console.log("Novo agendamento");
-                        }}
-                    >
-                        <Plus className="w-4 h-4" />
-                        Novo Agendamento
-                    </Button>
-                </CardHeader>
+                    <CardHeader className="flex flex-row items-center justify-between pb-4">
+                        <Link href="/admin">
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="rounded-xl"
+                            >
+                                <ArrowLeft className="w-6 h-6" />
+                            </Button>
+                        </Link>
+
+                        <Button
+                            className="gap-2 rounded-xl shadow-sm"
+                            onClick={() => console.log("Novo agendamento")}
+                        >
+                            <Plus className="w-4 h-4" />
+                            Novo Agendamento
+                        </Button>
+                    </CardHeader>
 
 
+                    {/* TABELA */}
+                    <CardContent className="px-8 pb-8">
+                        <div className="rounded-xl border overflow-hidden">
+                            <Table className="min-w-[960px]">
 
-                <CardContent>
-                    <div className="rounded-md border overflow-x-auto">
-                        <Table className="min-w-[900px]">
-                            <TableHeader className="bg-muted/50">
-                                {table.getHeaderGroups().map(hg => (
-                                    <TableRow key={hg.id}>
-                                        {hg.headers.map(h => (
-                                            <TableHead
-                                                key={h.id}
-                                                className="font-semibold text-sm"
-                                            >
-                                                {flexRender(
-                                                    h.column.columnDef.header,
-                                                    h.getContext()
-                                                )}
-                                            </TableHead>
-                                        ))}
-                                    </TableRow>
-                                ))}
-                            </TableHeader>
-
-                            <TableBody className="text-sm">
-                                {loading ? (
-                                    <TableRow>
-                                        <TableCell colSpan={7}>
-                                            <div className="flex justify-center items-center py-12 text-muted-foreground">
-                                                <Loader2 className="animate-spin mr-2" />
-                                                Carregando agendamentos...
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ) : table.getRowModel().rows.length ? (
-                                    table.getRowModel().rows.map((row, i) => (
-                                        <TableRow
-                                            key={row.id}
-                                            className={`
-                                                hover:bg-muted/40 transition
-                                                ${i % 2 === 0 ? "bg-background" : "bg-muted/10"}
-                                            `}
-                                        >
-                                            {row.getVisibleCells().map(cell => (
-                                                <TableCell
-                                                    key={cell.id}
-                                                    className="py-3"
+                                {/* HEADER */}
+                                <TableHeader className="bg-muted/40">
+                                    {table.getHeaderGroups().map(hg => (
+                                        <TableRow key={hg.id} className="hover:bg-transparent">
+                                            {hg.headers.map(h => (
+                                                <TableHead
+                                                    key={h.id}
+                                                    className="font-semibold text-sm py-4"
                                                 >
                                                     {flexRender(
-                                                        cell.column.columnDef.cell,
-                                                        cell.getContext()
+                                                        h.column.columnDef.header,
+                                                        h.getContext()
                                                     )}
-                                                </TableCell>
+                                                </TableHead>
                                             ))}
                                         </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={7}>
-                                            <div className="text-center py-12 text-muted-foreground">
-                                                Nenhum agendamento encontrado.
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </CardContent>
-            </Card>
+                                    ))}
+                                </TableHeader>
 
+                                {/* BODY */}
+                                <TableBody className="text-sm">
+                                    {loading ? (
+                                        <TableRow>
+                                            <TableCell colSpan={7}>
+                                                <div className="flex justify-center items-center py-14 text-muted-foreground">
+                                                    <Loader2 className="animate-spin mr-2" />
+                                                    Carregando agendamentos...
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : table.getRowModel().rows.length ? (
+                                        table.getRowModel().rows.map((row, i) => (
+                                            <TableRow
+                                                key={row.id}
+                                                className={`
+                          transition-colors
+                          hover:bg-muted/40
+                          ${i % 2 === 0 ? "bg-background" : "bg-muted/10"}
+                        `}
+                                            >
+                                                {row.getVisibleCells().map(cell => (
+                                                    <TableCell
+                                                        key={cell.id}
+                                                        className="py-3 px-4 align-middle"
+                                                    >
+                                                        {flexRender(
+                                                            cell.column.columnDef.cell,
+                                                            cell.getContext()
+                                                        )}
+                                                    </TableCell>
+                                                ))}
+                                            </TableRow>
+                                        ))
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={7}>
+                                                <div className="text-center py-14 text-muted-foreground">
+                                                    Nenhum agendamento encontrado.
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* DIALOG EDIT */}
             <EditScheduleDialog
                 open={isEditOpen}
                 setOpen={setIsEditOpen}
@@ -276,22 +273,24 @@ export function DataTableSchedules() {
                 onSave={handleUpdate}
             />
 
+            {/* DIALOG DELETE */}
             <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-                <AlertDialogContent>
+                <AlertDialogContent className="rounded-2xl">
                     <AlertDialogHeader>
-                        <AlertDialogTitle>
-                            Confirmar exclusão
-                        </AlertDialogTitle>
+                        <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
                         <AlertDialogDescription>
                             Essa ação não pode ser desfeita.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
 
                     <AlertDialogFooter>
-                        <AlertDialogCancel>
+                        <AlertDialogCancel className="rounded-lg">
                             Cancelar
                         </AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete}>
+                        <AlertDialogAction
+                            className="rounded-lg"
+                            onClick={handleDelete}
+                        >
                             Excluir
                         </AlertDialogAction>
                     </AlertDialogFooter>
