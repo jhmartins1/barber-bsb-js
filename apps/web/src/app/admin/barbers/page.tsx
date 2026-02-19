@@ -1,8 +1,18 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import BarbersTable from "./barbers";
 
 export default async function BarbersPage() {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL!}/barber`, {
+        cache: "no-store",
+    });
+
+    const result = await res.json();
+
+    // 👇 GARANTA que está passando um ARRAY
+    const barbers = result.data ?? result;
+
     const sessionResult = await authClient.getSession({
         fetchOptions: {
             headers: await headers(),
@@ -25,6 +35,7 @@ export default async function BarbersPage() {
             <p className="text-lg mb-4">
                 Bem-vindo(a), {session.user.name}
             </p>
+            <BarbersTable barbers={barbers} />
         </div>
     );
 }
