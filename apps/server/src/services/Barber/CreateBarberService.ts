@@ -1,5 +1,6 @@
 import { prisma } from "@barberjs/db";
 import { writeFile } from "fs/promises";
+import { existsSync, mkdirSync } from "fs";
 import { join } from "path";
 import { randomUUID } from "crypto";
 
@@ -19,7 +20,15 @@ export class CreateBarberService {
             const buffer = Buffer.from(await image.arrayBuffer());
 
             const fileName = `${randomUUID()}-${image.name}`;
-            const uploadPath = join(process.cwd(), "uploads", fileName);
+
+            // 🔥 CAMINHO DA PASTA
+            const uploadDir = join(process.cwd(), "uploads");
+
+            if (!existsSync(uploadDir)) {
+                mkdirSync(uploadDir, { recursive: true });
+            }
+
+            const uploadPath = join(uploadDir, fileName);
 
             await writeFile(uploadPath, buffer);
 
