@@ -2,7 +2,15 @@ import { prisma } from "@barberjs/db";
 
 export class GetAllBarberService {
     async execute() {
-        const barber = await prisma.barber.findMany();
-        return barber;
+        const barbers = await prisma.barber.findMany({
+            include: {
+                services: true,
+            },
+            orderBy: {
+                name: "asc",
+            },
+        });
+
+        return barbers;
     }
 }
