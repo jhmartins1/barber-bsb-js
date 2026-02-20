@@ -1,27 +1,44 @@
 import { prisma } from "@barberjs/db";
-import type { IBarber } from "@/utils/BarberInterface";
+import { writeFile } from "fs/promises";
+import { join } from "path";
+import { randomUUID } from "crypto";
+
+interface CreateBarberDTO {
+    name: string;
+    phone: string;
+    image?: File;
+    services?: string[];
+}
 
 export class CreateBarberService {
-    async execute({ name, phone, image }: IBarber) {
-        if (!name) {
-            throw new Error("Name is required");
-        }
+    async execute({ name, phone, image, services }: CreateBarberDTO) {
+        let imagePath: string | null = null;
 
-        const phoneExists = await prisma.barber.findFirst({
-            where: {
-                phone,
-            },
-        });
+        // ✅ se veio imagem
+        if (image && typeof image === "object" && "arrayBuffer" in image) {
+            const buffer = Buffer.from(await image.arrayBuffer());
 
-        if (phoneExists) {
-            throw new Error("Phone already exists");
+            const fileName = `${randomUUID()}-${image.name}`;
+            const uploadPath = join(process.cwd(), "uploads", fileName);
+
+            await writeFile(uploadPath, buffer);
+
+            imagePath = `/uploads/${fileName}`;
         }
 
         const barber = await prisma.barber.create({
             data: {
                 name,
                 phone,
-                image,
+                image: imagePath,
+                services: services?.length
+                    ? {
+                        connect: services.map((id) => ({ id })),
+                    }
+                    : undefined,
+            },
+            include: {
+                services: true,
             },
         });
 

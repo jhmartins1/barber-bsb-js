@@ -1,7 +1,7 @@
 import { GetAllBService } from "@/services/BServices/GetAllBService";
 
 export class GetAllBServiceController {
-    async handle({ set }: any) {
+    async handle({ set }: { set: any }) {
         try {
             const service = new GetAllBService();
             const services = await service.execute();
@@ -9,14 +9,19 @@ export class GetAllBServiceController {
             set.status = 200;
 
             return {
+                success: true,
                 message: "Services fetched successfully",
                 data: services,
             };
         } catch (error) {
+            console.error("GetAllBService error:", error);
+
             set.status = 500;
 
             return {
-                message: (error as Error).message,
+                success: false,
+                message: "Internal server error",
+                data: [],
             };
         }
     }

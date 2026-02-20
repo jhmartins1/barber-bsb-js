@@ -10,11 +10,14 @@ export class GetAllBService {
                         name: true,
                         phone: true,
                         image: true,
-                    }
-                }
+                    },
+                },
+            },
+            orderBy: {
+                name: "asc",
             },
         });
 
-        return services;
+        return services ?? [];
     }
 }

@@ -2,9 +2,10 @@ import { auth } from "@barberjs/auth";
 import { env } from "@barberjs/env/server";
 import { cors } from "@elysiajs/cors";
 import { Elysia } from "elysia";
+import { staticPlugin } from "@elysiajs/static";
 
 // BARBER IMPORTS
-import { CreateBarberController, createBarberBodySchema } from "./controllers/Barber/CreateBarberController";
+import { CreateBarberController } from "./controllers/Barber/CreateBarberController";
 import { GetOneBarberController } from "./controllers/Barber/GetOneBarberController";
 import { GetAllBarberController } from "./controllers/Barber/GetAllBarberController";
 import { UpdateBarberController } from "./controllers/Barber/UpdateBarberController";
@@ -56,6 +57,10 @@ const app = new Elysia()
       exposeHeaders: ["Set-Cookie"],
     }),
   )
+  .use(staticPlugin({
+    assets: "uploads",
+    prefix: "/uploads",
+  }))
   .all("/api/auth/*", async (context) => {
     const { request, status } = context;
     if (["POST", "GET"].includes(request.method)) {
@@ -63,9 +68,7 @@ const app = new Elysia()
     }
     return status(405);
   })
-  .post("/barber", (ctx) => createBarberController.handle(ctx), {
-    body: createBarberBodySchema,
-  })
+  .post("/barber", (ctx) => createBarberController.handle(ctx))
   .get("/barber/:id", (ctx) => getOneBarberController.handle(ctx))
   .get("/barber", (ctx) => getAllBarberController.handle(ctx))
   .put("/barber/:id", (ctx) => updateBarberController.handle(ctx))

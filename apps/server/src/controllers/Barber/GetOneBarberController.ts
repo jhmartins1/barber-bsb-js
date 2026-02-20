@@ -11,7 +11,12 @@ export class GetOneBarberController {
             const service = new GetOneBarberService();
             const barber = await service.execute(params.id);
 
-            return barber;
+            set.status = 200;
+
+            return {
+                message: "Barber fetched successfully",
+                data: barber,
+            };
         } catch (error) {
             set.status = 404;
 
@@ -21,4 +26,3 @@ export class GetOneBarberController {
         }
     }
 }
-

@@ -1,19 +1,30 @@
 import { CreateBarberService } from "@/services/Barber/CreateBarberService";
-import { t } from "elysia";
-
-export const createBarberBodySchema = t.Object({
-    name: t.String(),
-    phone: t.Optional(t.String()),
-    image: t.Optional(t.String()),
-});
 
 export class CreateBarberController {
-    async handle({ body }: { body: typeof createBarberBodySchema.static }) {
+    async handle({ body }: any) {
+        let services: string[] | undefined = undefined;
 
-        const createBarberService = new CreateBarberService();
+        // ✅ parse seguro
+        if (body.services) {
+            try {
+                services =
+                    typeof body.services === "string"
+                        ? JSON.parse(body.services)
+                        : body.services;
+            } catch {
+                services = undefined;
+            }
+        }
 
-        const barber = await createBarberService.execute(body);
+        const service = new CreateBarberService();
 
-        return barber
+        const barber = await service.execute({
+            name: body.name,
+            phone: body.phone,
+            image: body.image, // já tratado no upload
+            services,
+        });
+
+        return barber;
     }
 }

@@ -10,9 +10,14 @@ export class UpdateBarberController {
                 ...body,
             });
 
-            return barber;
+            set.status = 200;
+
+            return {
+                message: "Barber updated successfully",
+                data: barber,
+            };
         } catch (error) {
-            set.status = 404;
+            set.status = 400;
 
             return {
                 message: (error as Error).message,
