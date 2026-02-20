@@ -3,6 +3,24 @@ import { env } from "@barberjs/env/server";
 import { cors } from "@elysiajs/cors";
 import { Elysia } from "elysia";
 import { staticPlugin } from "@elysiajs/static";
+import { mkdirSync, existsSync } from "fs";
+import { join } from "path";
+
+// =============================
+// 🔥 GARANTE PASTA UPLOADS
+// =============================
+const uploadsDir = join(process.cwd(), "uploads");
+
+if (!existsSync(uploadsDir)) {
+  mkdirSync(uploadsDir, { recursive: true });
+  console.log("📁 uploads folder created");
+} else {
+  console.log("📁 uploads folder already exists");
+}
+
+// =============================
+// CONTROLLERS IMPORTS
+// =============================
 
 // BARBER IMPORTS
 import { CreateBarberController } from "./controllers/Barber/CreateBarberController";
@@ -12,19 +30,28 @@ import { UpdateBarberController } from "./controllers/Barber/UpdateBarberControl
 import { DeleteBarberController } from "./controllers/Barber/DeleteBarberController";
 
 // BARBER SERVICES IMPORTS
-import { CreateBServiceController, createServiceBodySchema } from "./controllers/BServices/CreateBServiceController";
+import {
+  CreateBServiceController,
+  createServiceBodySchema,
+} from "./controllers/BServices/CreateBServiceController";
 import { GetAllBServiceController } from "./controllers/BServices/GetAllBServiceController";
 import { GetOneBServiceController } from "./controllers/BServices/GetOneBServiceController";
 import { UpdateBServiceController } from "./controllers/BServices/UpdateBServiceController";
 import { DeleteBServiceController } from "./controllers/BServices/DeleteBServiceController";
 
 // SCHEDULE IMPORTS
-import { CreateScheduleController, createScheduleBodySchema } from "./controllers/Schedule/CreateScheduleController";
+import {
+  CreateScheduleController,
+  createScheduleBodySchema,
+} from "./controllers/Schedule/CreateScheduleController";
 import { GetAllScheduleController } from "./controllers/Schedule/GetAllScheduleController";
 import { GetOneScheduleController } from "./controllers/Schedule/GetOneScheduleController";
 import { UpdateScheduleController } from "./controllers/Schedule/UpdateScheduleController";
 import { DeleteScheduleController } from "./controllers/Schedule/DeleteScheduleController";
 
+// =============================
+// INSTÂNCIAS
+// =============================
 
 // BARBER CONTROLLERS
 const createBarberController = new CreateBarberController();
@@ -47,20 +74,31 @@ const getOneScheduleController = new GetOneScheduleController();
 const updateScheduleController = new UpdateScheduleController();
 const deleteScheduleController = new DeleteScheduleController();
 
+// =============================
+// APP
+// =============================
 const app = new Elysia()
   .use(
     cors({
       origin: env.CORS_ORIGIN,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization", 'Cookie'],
+      allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
       credentials: true,
       exposeHeaders: ["Set-Cookie"],
     }),
   )
-  .use(staticPlugin({
-    assets: "uploads",
-    prefix: "/uploads",
-  }))
+
+  // 🔥 SERVIR ARQUIVOS ESTÁTICOS
+  .use(
+    staticPlugin({
+      assets: uploadsDir, // 👈 caminho absoluto (IMPORTANTE)
+      prefix: "/uploads",
+    }),
+  )
+
+  // =============================
+  // AUTH
+  // =============================
   .all("/api/auth/*", async (context) => {
     const { request, status } = context;
     if (["POST", "GET"].includes(request.method)) {
@@ -68,11 +106,19 @@ const app = new Elysia()
     }
     return status(405);
   })
+
+  // =============================
+  // BARBER ROUTES
+  // =============================
   .post("/barber", (ctx) => createBarberController.handle(ctx))
   .get("/barber/:id", (ctx) => getOneBarberController.handle(ctx))
   .get("/barber", (ctx) => getAllBarberController.handle(ctx))
   .put("/barber/:id", (ctx) => updateBarberController.handle(ctx))
   .delete("/barber/:id", (ctx) => deleteBarberController.handle(ctx))
+
+  // =============================
+  // SERVICES ROUTES
+  // =============================
   .post("/service", (ctx) => createBServiceController.handle(ctx), {
     body: createServiceBodySchema,
   })
@@ -80,6 +126,10 @@ const app = new Elysia()
   .get("/service/:id", (ctx) => getOneBServiceController.handle(ctx))
   .put("/service/:id", (ctx) => updateBServiceController.handle(ctx))
   .delete("/service/:id", (ctx) => deleteBServiceController.handle(ctx))
+
+  // =============================
+  // SCHEDULE ROUTES
+  // =============================
   .post("/schedule", (ctx) => createScheduleController.handle(ctx), {
     body: createScheduleBodySchema,
   })
@@ -87,7 +137,9 @@ const app = new Elysia()
   .get("/schedule/:id", (ctx) => getOneScheduleController.handle(ctx))
   .put("/schedule/:id", (ctx) => updateScheduleController.handle(ctx))
   .delete("/schedule/:id", (ctx) => deleteScheduleController.handle(ctx))
+
   .get("/", () => "Hello, World!")
+
   .listen(env.PORT, () => {
-    console.log(`Server is running on port ${env.PORT}`);
+    console.log(`🚀 Server is running on port ${env.PORT}`);
   });
