@@ -1,8 +1,18 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import ServicesTable from "./services";
 
 export default async function ServicesPage() {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL!}/service`, {
+        cache: "no-store",
+    });
+
+    const result = await res.json();
+
+    // 👇 GARANTA que está passando um ARRAY
+    const services = result.data ?? result;
+
     const sessionResult = await authClient.getSession({
         fetchOptions: {
             headers: await headers(),
@@ -25,6 +35,8 @@ export default async function ServicesPage() {
             <p className="text-lg mb-4">
                 Bem-vindo(a), {session.user.name}
             </p>
+
+            <ServicesTable services={services} />
         </div>
     );
 }
