@@ -31,6 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
+import EditBarberDialog from "./edit-barber";
 
 const API_URL = process.env.NEXT_PUBLIC_SERVER_URL!;
 
@@ -77,6 +78,8 @@ export default function BarbersTable({ barbers }: Props) {
     const [open, setOpen] = React.useState(false);
     const [loading, setLoading] = React.useState(false);
     const [services, setServices] = React.useState<Service[]>([]);
+    const [editOpen, setEditOpen] = React.useState(false);
+    const [barberToEdit, setBarberToEdit] = React.useState<Barber | null>(null);
 
     const [form, setForm] = React.useState({
         name: "",
@@ -152,6 +155,11 @@ export default function BarbersTable({ barbers }: Props) {
                 ? prev.serviceIds.filter((s) => s !== id)
                 : [...prev.serviceIds, id],
         }));
+    };
+
+    const handleAskEdit = (barber: Barber) => {
+        setBarberToEdit(barber);
+        setEditOpen(true);
     };
 
     // ===============================
@@ -323,7 +331,11 @@ export default function BarbersTable({ barbers }: Props) {
 
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    <Button variant="outline" size="sm">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleAskEdit(barber)}
+                                                    >
                                                         Editar
                                                     </Button>
                                                     <Button
@@ -508,6 +520,15 @@ export default function BarbersTable({ barbers }: Props) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            <EditBarberDialog
+                open={editOpen}
+                onOpenChange={(v) => {
+                    setEditOpen(v);
+                    if (!v) setBarberToEdit(null);
+                }}
+                barber={barberToEdit}
+                services={services}
+            />
         </>
     );
 }
