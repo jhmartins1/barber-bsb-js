@@ -26,13 +26,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import EditServiceDialog from "./edit-service";
+import type { IService } from "@/app/types/service";
 
 const API_URL = process.env.NEXT_PUBLIC_SERVER_URL!;
-
-type Service = {
-    id: string;
-    name: string;
-};
 
 type Barber = {
     id: string;
@@ -40,7 +37,7 @@ type Barber = {
 };
 
 interface Props {
-    services: Service[];
+    services: IService[];
 }
 
 export default function ServicesTable({ services }: Props) {
@@ -51,7 +48,7 @@ export default function ServicesTable({ services }: Props) {
 
     const [deleteOpen, setDeleteOpen] = React.useState(false);
     const [serviceToDelete, setServiceToDelete] =
-        React.useState<Service | null>(null);
+        React.useState<IService | null>(null);
     const [deleting, setDeleting] = React.useState(false);
 
     // form states
@@ -63,6 +60,10 @@ export default function ServicesTable({ services }: Props) {
     const [barbers, setBarbers] = React.useState<Barber[]>([]);
     const [selectedBarbers, setSelectedBarbers] = React.useState<string[]>([]);
     const [loadingBarbers, setLoadingBarbers] = React.useState(false);
+
+    const [editOpen, setEditOpen] = React.useState(false);
+    const [serviceToEdit, setServiceToEdit] =
+        React.useState<IService | null>(null);
 
     // ===============================
     // 🔥 FETCH BARBERS AO ABRIR MODAL
@@ -186,7 +187,7 @@ export default function ServicesTable({ services }: Props) {
     // ===============================
     // 🗑️ DELETE
     // ===============================
-    const handleAskDelete = (service: Service) => {
+    const handleAskDelete = (service: IService) => {
         setServiceToDelete(service);
         setDeleteOpen(true);
     };
@@ -213,6 +214,11 @@ export default function ServicesTable({ services }: Props) {
         } finally {
             setDeleting(false);
         }
+    };
+
+    const handleAskEdit = (service: IService) => {
+        setServiceToEdit(service);
+        setEditOpen(true);
     };
 
     return (
@@ -255,7 +261,11 @@ export default function ServicesTable({ services }: Props) {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    <Button variant="outline" size="sm">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleAskEdit(service)}
+                                                    >
                                                         Editar
                                                     </Button>
                                                     <Button
@@ -323,16 +333,22 @@ export default function ServicesTable({ services }: Props) {
 
                             {!loadingBarbers && (
                                 <div className="space-y-2 max-h-48 overflow-y-auto border rounded-lg p-3">
+
+                                    {/* ✅ Marcar todos */}
                                     <div className="flex items-center gap-2">
                                         <Checkbox
                                             checked={allSelected}
-                                            onCheckedChange={(v) => handleToggleAll(!!v)}
+                                            onCheckedChange={(checked) => {
+                                                const isChecked = checked === true;
+                                                handleToggleAll(isChecked);
+                                            }}
                                         />
                                         <span className="text-sm font-medium">
                                             Marcar todos
                                         </span>
                                     </div>
 
+                                    {/* ✅ Lista de barbeiros */}
                                     {barbers.map((barber) => (
                                         <div
                                             key={barber.id}
@@ -340,9 +356,10 @@ export default function ServicesTable({ services }: Props) {
                                         >
                                             <Checkbox
                                                 checked={selectedBarbers.includes(barber.id)}
-                                                onCheckedChange={(v) =>
-                                                    handleToggleBarber(barber.id, !!v)
-                                                }
+                                                onCheckedChange={(checked) => {
+                                                    const isChecked = checked === true;
+                                                    handleToggleBarber(barber.id, isChecked);
+                                                }}
                                             />
                                             <span className="text-sm">{barber.name}</span>
                                         </div>
@@ -366,6 +383,14 @@ export default function ServicesTable({ services }: Props) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            <EditServiceDialog
+                open={editOpen}
+                onOpenChange={(v) => {
+                    setEditOpen(v);
+                    if (!v) setServiceToEdit(null);
+                }}
+                service={serviceToEdit}
+            />
         </>
     );
 }
