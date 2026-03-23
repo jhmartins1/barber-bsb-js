@@ -383,6 +383,39 @@ export default function ServicesTable({ services }: Props) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            {/* MODAL DELETE */}
+            <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+                <DialogContent className="sm:max-w-md rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Excluir Serviço</DialogTitle>
+                    </DialogHeader>
+
+                    <div className="py-2 text-sm text-muted-foreground">
+                        Tem certeza que deseja excluir o serviço{" "}
+                        <strong>{serviceToDelete?.name}</strong>?
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setDeleteOpen(false)}
+                        >
+                            Cancelar
+                        </Button>
+
+                        <Button
+                            variant="destructive"
+                            onClick={handleDelete}
+                            disabled={deleting}
+                        >
+                            {deleting && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
+                            Excluir
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
             <EditServiceDialog
                 open={editOpen}
                 onOpenChange={(v) => {
