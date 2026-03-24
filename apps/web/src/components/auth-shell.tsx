@@ -21,7 +21,7 @@ export default function AuthShell({
   footer,
 }: AuthShellProps) {
   return (
-    <section className="relative flex min-h-[calc(100svh-73px)] items-center justify-center overflow-hidden bg-[linear-gradient(180deg,rgba(248,245,238,0.98)_0%,rgba(255,255,255,1)_100%)] px-4 py-10 dark:bg-[linear-gradient(180deg,rgba(12,10,7,1)_0%,rgba(17,14,11,1)_100%)]">
+    <section className="relative flex min-h-[calc(100svh-73px)] items-center justify-center overflow-x-hidden bg-[linear-gradient(180deg,rgba(248,245,238,0.98)_0%,rgba(255,255,255,1)_100%)] px-4 py-10 dark:bg-[linear-gradient(180deg,rgba(12,10,7,1)_0%,rgba(17,14,11,1)_100%)]">
       <div
         aria-hidden="true"
         className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(180,132,61,0.12),transparent_28%)]"
